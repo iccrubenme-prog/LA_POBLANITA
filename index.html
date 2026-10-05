@@ -318,11 +318,12 @@ body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
       <h2>Carga de la ruta</h2>
       <div id="kRutaWrap" hidden><label for="kRuta" style="margin-top:0">Ruta a cargar</label><select id="kRuta"></select></div>
       <p class="hint" id="kInfo" style="margin-top:-.4rem"></p>
-      <button class="btn btn-block" data-act="scanCarga" style="margin-top:.75rem">
+      <button class="btn btn-block" data-act="scanCarga" id="kScan" style="margin-top:.75rem">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M10 8v8M13 8v8M16 8v8"/></svg>
         Escanear piezas (suma 1 por lectura)</button>
       <div id="kTabla" style="margin-top:.75rem"></div>
-      <button class="btn btn-primary btn-block" data-act="saveCarga">Guardar carga</button>
+      <p class="hint warn" id="kSoloLectura" hidden>La carga la registra el administrador. Aquí puedes consultarla.</p>
+      <button class="btn btn-primary btn-block" data-act="saveCarga" id="kSave">Guardar carga</button>
     </div>
     <div class="card"><h2>Existencias del día</h2><div id="kExist"></div></div>
   </section>
@@ -908,6 +909,7 @@ async function copyTicket(){
 function renderCarga(){
   const adm = S.user && S.user.rol === 'ADMIN';
   $('#kRutaWrap').hidden = !adm;
+  $('#kScan').hidden = !adm; $('#kSave').hidden = !adm; $('#kSoloLectura').hidden = adm || !S.user;
   if (adm) $('#kRuta').innerHTML = S.rutas.length
     ? S.rutas.map(r => `<option value="${esc(r.id)}"${r.id === S.ruta ? ' selected' : ''}>${esc(r.nombre)}</option>`).join('')
     : '<option value="">Crea una ruta primero</option>';
@@ -920,7 +922,7 @@ function renderCarga(){
     const f = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.kcode;
     $('#kTabla').innerHTML = S.productos.map(p => `<div class="k-row">
       <div><strong>${esc(p.nombre)}</strong><span class="sub">${p.gramaje} g, código ${esc(p.codigo)}</span></div>
-      <input type="number" min="0" inputmode="numeric" data-kcode="${esc(p.codigo)}" value="${S.cargaDraft[p.codigo] || ''}" placeholder="0" aria-label="Piezas cargadas de ${esc(p.nombre)}"></div>`).join('');
+      <input type="number" min="0" inputmode="numeric" data-kcode="${esc(p.codigo)}"${adm ? '' : ' disabled'} value="${S.cargaDraft[p.codigo] || ''}" placeholder="0" aria-label="Piezas cargadas de ${esc(p.nombre)}"></div>`).join('');
     if (f) { const el = document.querySelector(`[data-kcode="${CSS.escape(f)}"]`); if (el) el.focus(); }
   }
   renderExist();
@@ -947,6 +949,7 @@ function renderExist(){
     <tfoot><tr><td>Total</td><td class="n">${tc}</td><td class="n">${tv}</td><td class="n">${hay ? tc - tv : '—'}</td></tr></tfoot></table></div>`;
 }
 async function saveCarga(b){
+  if (!S.user || S.user.rol !== 'ADMIN') return;
   if (!S.ruta) { openRuta(); return; }
   const items = {};
   Object.entries(S.cargaDraft).forEach(([c,q]) => { q = Math.floor(Number(q) || 0); if (q > 0) items[c] = q; });
@@ -1603,7 +1606,7 @@ const acts = {
     if (!(await confirmDlg(`¿Dar de baja a ${c.nombre}? Sus ventas anteriores se conservan.`, 'Dar de baja'))) return;
     try { const r = await call('eliminarCliente', c.id); setClientes(r.clientes); if (S.editCliente === c.id) fillCliente(null); renderClientes(); renderClienteSelect(); toast('Cliente dado de baja', 'ok'); } catch(e){ fail(e); }
   },
-  scanVenta: () => openScan('venta'), scanCarga: () => openScan('carga'), scanProd: () => openScan('producto'),
+  scanVenta: () => openScan('venta'), scanCarga: () => { if (S.user && S.user.rol === 'ADMIN') openScan('carga'); }, scanProd: () => openScan('producto'),
   closeScan, scanManualAdd: () => { handleCode($('#scanManual').value, false); $('#scanManual').value = ''; },
   addCodigo: () => { if (addToCart($('#vCodigo').value, 1)) $('#vCodigo').value = ''; },
   tileAdd: b => addToCart(b.dataset.code, 1), mas: b => addToCart(b.dataset.code, 1), menos: b => addToCart(b.dataset.code, -1),
