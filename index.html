@@ -14,9 +14,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
 :root{
+  --lime:#3E8E2F;
   --bg:#EEF1F7; --surface:#FFFFFF; --ink:#15203B; --muted:#56627D; --line:#D5DBE8;
   --cobalt:#1D3F91; --cobalt-btn:#1D3F91; --cobalt-soft:#E3E9F7; --on-cobalt:#FFFFFF;
   --cherry:#C92A39; --mango:#F2A81D; --warn-bg:#FFF4DA; --warn-ink:#6B4A00; --band:#1D3F91;
@@ -141,7 +144,8 @@ table.data tfoot td{font-weight:700;border-bottom:0;border-top:2px solid var(--i
 .nav-in{max-width:760px;margin:0 auto;display:flex}
 .nav button{flex:1;border:0;background:none;padding:.55rem .25rem .6rem;display:flex;flex-direction:column;align-items:center;gap:.15rem;
   font-size:.78rem;font-weight:700;color:var(--muted);cursor:pointer;position:relative}
-.nav button svg{width:26px;height:26px}
+.nav button svg{width:24px;height:24px}
+.nav button{font-size:.72rem;padding-left:.1rem;padding-right:.1rem}
 .nav button.on{color:var(--cobalt)}
 .nav button.on::before{content:"";position:absolute;top:0;left:25%;right:25%;height:3px;border-radius:0 0 3px 3px;background:var(--mango)}
 
@@ -159,6 +163,63 @@ table.data tfoot td{font-weight:700;border-bottom:0;border-top:2px solid var(--i
   padding-top:calc(1rem + env(safe-area-inset-top,0px));padding-bottom:calc(1rem + env(safe-area-inset-bottom,0px))}
 .login-screen .sheet{max-width:420px;border-radius:20px;border-top:5px solid var(--mango);box-shadow:0 18px 50px rgba(0,0,0,.35);padding:1.5rem 1.25rem}
 body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
+.map-head{display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap}
+.map-head .item-actions{flex-wrap:nowrap}
+.legend{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.6rem}
+.legend-chip{display:inline-flex;align-items:center;gap:.4rem;border:1.5px solid var(--line);background:var(--bg);border-radius:999px;
+  padding:.35rem .7rem;font-size:.85rem;font-weight:700;cursor:pointer}
+.legend-chip i{width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+.legend-chip b{color:var(--muted);font-weight:700}
+.legend-chip.off{opacity:.4;text-decoration:line-through}
+#map{position:relative;z-index:0;height:min(60vh,560px);min-height:340px;border-radius:16px;border:1px solid var(--line);margin-bottom:1rem;background:var(--cobalt-soft)}
+.map-off{display:flex;align-items:center;justify-content:center;text-align:center;padding:1rem;color:var(--muted)}
+.assign-row{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
+.assign-row strong{flex:1;min-width:8rem;font-family:"Fredoka",system-ui,sans-serif;font-size:1.15rem;font-weight:600}
+.lp-pop{font-family:"Atkinson Hyperlegible",system-ui,sans-serif;min-width:210px}
+.lp-pop strong{display:block;font-size:1rem;color:#15203B}
+.lp-pop .sub{color:#56627D}
+.lp-pop .pop-row{display:flex;gap:.4rem;margin-top:.5rem}
+.lp-pop select{min-height:40px;padding:.3rem .5rem;font-size:15px;background:#EEF1F7;color:#15203B;border:1.5px solid #D5DBE8;border-radius:10px}
+.lp-pop .btn{min-height:40px;background:#1D3F91;border-color:#1D3F91;color:#fff}
+.seg{display:flex;gap:.4rem;overflow-x:auto;margin:.75rem -.25rem 0;padding:0 .25rem .25rem;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{flex:none;border:1.5px solid var(--line);background:var(--bg);border-radius:999px;padding:.45rem .85rem;font-weight:700;font-size:.88rem;cursor:pointer;color:var(--ink)}
+.seg button.on{background:var(--cobalt-btn);border-color:var(--cobalt-btn);color:#fff}
+.rep-sum{background:var(--cobalt-soft);border-color:transparent;font-size:1rem;line-height:1.5}
+.rep-sum b{font-family:"Fredoka",system-ui,sans-serif;font-weight:600}
+.rep-range{font-size:.82rem;color:var(--muted);margin-top:.35rem}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1rem}
+@media (min-width:560px){.kpis{grid-template-columns:repeat(3,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:.75rem .85rem}
+.kpi span{display:block;font-size:.8rem;color:var(--muted);font-weight:700}
+.kpi b{display:block;font-family:"Fredoka",system-ui,sans-serif;font-weight:700;font-size:1.45rem;line-height:1.15;margin:.15rem 0}
+.kpi em{font-style:normal;font-size:.8rem;font-weight:700}
+.up{color:var(--lime,#3E8E2F)}.down{color:var(--cherry)}.flat{color:var(--muted)}
+.card-head{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem}
+.card-head h2{margin:0}
+.mini-seg{display:flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.mini-seg button{border:0;background:var(--bg);padding:.35rem .65rem;font-size:.8rem;font-weight:700;cursor:pointer;color:var(--muted)}
+.mini-seg button.on{background:var(--cobalt-btn);color:#fff}
+.chart{width:100%;height:auto;display:block;touch-action:manipulation}
+.chart rect[data-bar]{cursor:pointer}
+.chart-cap{min-height:1.4rem;font-size:.9rem;font-weight:700;margin-top:.25rem}
+.hbar{padding:.5rem 0;border-top:1px solid var(--line)}
+.hbar:first-child{border-top:0}
+.hbar-top{display:flex;justify-content:space-between;gap:.75rem;align-items:baseline}
+.hbar-top span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbar-top b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.track{height:8px;border-radius:99px;background:var(--bg);margin-top:.35rem;overflow:hidden}
+.fill{height:100%;border-radius:99px;background:var(--cobalt-btn)}
+.hbar .sub{margin-top:.2rem}
+.pill{display:inline-block;font-size:.75rem;font-weight:700;border-radius:99px;padding:.1rem .5rem;background:var(--bg);color:var(--muted)}
+.pill.warn{background:var(--warn-bg);color:var(--warn-ink)}
+.pill.ok{background:rgba(62,142,47,.14);color:#2D6B22}
+.rep-empty{text-align:center;color:var(--muted);padding:1rem}
+.check-item{display:flex;align-items:center;gap:.65rem;padding:.55rem .7rem;border:1.5px solid var(--line);border-radius:12px;margin:.4rem 0 0;font-weight:400;font-size:.95rem;cursor:pointer;background:var(--bg)}
+.check-item input{width:22px;height:22px;flex:none}
+.check-item .sub{display:inline}
+.rt-dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:.4rem;vertical-align:middle;box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--line)}
+.list-head select{width:auto;min-height:40px;padding:.3rem .6rem;font-size:15px}
 .credit{display:flex;align-items:center;justify-content:center;gap:.4rem;font-size:.78rem;color:var(--muted);letter-spacing:.02em}
 .credit img{width:16px;height:16px}
 .credit b{font-weight:700}
@@ -219,11 +280,11 @@ body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
       <label for="cDir">Dirección</label>
       <textarea id="cDir" rows="2" placeholder="Se llena al tomar la ubicación"></textarea>
       <p class="hint" id="dirHint">Se llena sola con la ubicación. Revísala y agrega referencias si hace falta.</p>
-      <div id="cRutaWrap" hidden><label for="cRuta">Ruta</label><select id="cRuta"></select></div>
       <button class="btn btn-primary btn-block" data-act="saveCliente" id="cSave">Guardar cliente</button>
       <button class="btn btn-block" data-act="cancelCliente" id="cCancel" hidden style="margin-top:.5rem">Cancelar edición</button>
     </div>
-    <div class="list-head"><h2>Clientes de la ruta</h2><label class="toggle"><input type="checkbox" id="cTodos"> Ver todas las rutas</label></div>
+    <div class="list-head"><h2 id="cListTitle">Clientes de la ruta</h2><label class="toggle" id="cTodosWrap"><input type="checkbox" id="cTodos"> Ver todas las rutas</label>
+      <select id="cFiltro" hidden aria-label="Filtrar clientes por ruta"></select></div>
     <input id="cBuscar" type="search" placeholder="Buscar por nombre o dirección" aria-label="Buscar cliente">
     <div id="cLista"></div>
   </section>
@@ -255,6 +316,7 @@ body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
   <section id="v-carga" class="view">
     <div class="card">
       <h2>Carga de la ruta</h2>
+      <div id="kRutaWrap" hidden><label for="kRuta" style="margin-top:0">Ruta a cargar</label><select id="kRuta"></select></div>
       <p class="hint" id="kInfo" style="margin-top:-.4rem"></p>
       <button class="btn btn-block" data-act="scanCarga" style="margin-top:.75rem">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M10 8v8M13 8v8M16 8v8"/></svg>
@@ -283,13 +345,73 @@ body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
     <input id="pBuscar" type="search" placeholder="Buscar por nombre o código" aria-label="Buscar producto">
     <div id="pLista"></div>
   </section>
+  <section id="v-rutas" class="view">
+    <div class="card">
+      <h2 id="rtFormTitle">Nueva ruta</h2>
+      <label for="rtNombre" style="margin-top:0">Nombre de la ruta</label>
+      <input id="rtNombre" autocomplete="off" maxlength="40" placeholder="Ej. Ruta Centro">
+      <label class="check-item" id="rtActivaWrap" hidden><input type="checkbox" id="rtActiva"> Ruta activa</label>
+      <label style="margin-top:1rem">Repartidores asignados</label>
+      <div id="rtReps"></div>
+      <p class="hint">Cada repartidor trabaja una sola ruta. Si ya tiene otra, al guardar se cambia a esta.</p>
+      <button class="btn btn-primary btn-block" data-act="rtSave" id="rtSave">Crear ruta</button>
+      <button class="btn btn-block" data-act="rtCancel" id="rtCancel" hidden style="margin-top:.5rem">Cancelar edición</button>
+    </div>
+    <div id="rtSinRuta"></div>
+    <div class="list-head"><h2>Rutas</h2><span class="hint" id="rtCount"></span></div>
+    <div id="rtLista"><p class="empty">Cargando rutas…</p></div>
+  </section>
+  <section id="v-mapa" class="view">
+    <div class="card tight">
+      <div class="map-head"><h2 style="margin:0" id="mTitle">Mapa de clientes</h2>
+        <div class="item-actions"><button class="btn btn-sm" data-act="mapYo">Mi ubicación</button><button class="btn btn-sm" data-act="mapFit">Ver todos</button></div></div>
+      <div class="legend" id="mLegend"></div>
+      <p class="hint" id="mInfo"></p>
+    </div>
+    <div id="map"></div>
+    <div class="card" id="mAssign">
+      <div class="assign-row">
+        <strong id="mSelCount">0 seleccionados</strong>
+        <button class="btn btn-sm" data-act="mapSelVisibles">Seleccionar los de la pantalla</button>
+        <button class="btn btn-sm" data-act="mapSelClear">Limpiar</button>
+      </div>
+      <label for="mRutaDest">Asignar los seleccionados a la ruta</label>
+      <div class="inline"><select id="mRutaDest"></select><button class="btn btn-primary" data-act="mapAsignar" id="mAsignar">Asignar</button></div>
+    </div>
+  </section>
+  <section id="v-reportes" class="view">
+    <div class="card">
+      <div class="map-head"><h2 style="margin:0">Reportes</h2><button class="btn btn-sm" data-act="repRecargar">Actualizar</button></div>
+      <div class="seg" id="rPresets" role="group" aria-label="Periodo">
+        <button data-act="repPreset" data-p="hoy">Hoy</button>
+        <button data-act="repPreset" data-p="ayer">Ayer</button>
+        <button data-act="repPreset" data-p="7d">7 días</button>
+        <button data-act="repPreset" data-p="mes">Este mes</button>
+        <button data-act="repPreset" data-p="mesant">Mes anterior</button>
+        <button data-act="repPreset" data-p="30d">30 días</button>
+        <button data-act="repPreset" data-p="anio">Este año</button>
+      </div>
+      <div class="two">
+        <div><label for="rDesde">Desde</label><input type="date" id="rDesde"></div>
+        <div><label for="rHasta">Hasta</label><input type="date" id="rHasta"></div>
+      </div>
+      <div class="two">
+        <div><label for="rRuta">Ruta</label><select id="rRuta"></select></div>
+        <div><label for="rUsuario">Repartidor</label><select id="rUsuario"></select></div>
+      </div>
+    </div>
+    <div id="rBody"></div>
+  </section>
   <p class="credit credit-app"><img src="data:image/png;base64,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" alt="">Hecho por <b>PrismaVia</b></p>
 </main>
 
 <nav class="nav" aria-label="Secciones"><div class="nav-in">
   <button data-view="clientes" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>Clientes</button>
-  <button data-view="vender"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.3 11.1a2 2 0 0 1-2 1.9H8.3a2 2 0 0 1-2-1.9z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>Vender</button>
+  <button data-view="vender" id="navVender"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.3 11.1a2 2 0 0 1-2 1.9H8.3a2 2 0 0 1-2-1.9z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>Vender</button>
   <button data-view="carga"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h11v10H2zM13 10h4l3 3v3h-7"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>Carga</button>
+  <button data-view="rutas" id="navRutas" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h8.5a3.5 3.5 0 0 0 0-7h-9a3.5 3.5 0 0 1 0-7H16"/></svg>Rutas</button>
+  <button data-view="mapa" id="navMapa" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>Mapa</button>
+  <button data-view="reportes" id="navReportes" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 16v-5M12 16V6M17 16v-8"/></svg>Reportes</button>
   <button data-view="catalogo" id="navCatalogo" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.5"/></svg>Catálogo</button>
 </div></nav>
 
@@ -438,7 +560,7 @@ function setProductos(list){
   S.productos = (list || []).slice().sort((a,b) => norm(a.nombre).localeCompare(norm(b.nombre)));
   S.prodMap = {}; S.productos.forEach(p => { S.prodMap[p.codigo] = p; });
 }
-function setClientes(list){ S.clientes = list || []; }
+function setClientes(list){ S.clientes = list || []; if (typeof renderMapa === 'function') renderMapa(); }
 function aplicarDia(d){
   if (!d) { S.carga = null; S.ventas = null; return; }
   S.fecha = d.fecha;
@@ -483,7 +605,12 @@ function logout(msg){
   setProductos([]); setClientes([]); aplicarDia(null);
   ['#cBuscar', '#vCodigo', '#pBuscar', '#lPin'].forEach(id => { $(id).value = ''; });
   fillProd(null); fillCliente(null); renderAll(); show('clientes');
-  $('#navCatalogo').hidden = true; $('#statusTxt').textContent = '';
+  ['#navCatalogo', '#navMapa', '#navReportes', '#navRutas'].forEach(id => { $(id).hidden = true; });
+  $('#navVender').hidden = false; $('#statusTxt').textContent = '';
+  RT.cargado = false; RT.admin = []; RT.repartidores = []; RT.sinRuta = 0; rtFill(null);
+  R.data = null; R.rango = null; R.ruta = ''; R.usuario = ''; $('#rBody').innerHTML = '';
+  M.sel.clear(); M.hidden.clear(); M.fitted = false;
+  if (M.yo) { M.yo.forEach(x => x.remove()); M.yo = null; }
   bloquear();
   if (typeof msg === 'string') toast(msg, 'warn');
 }
@@ -492,11 +619,16 @@ async function cargarTodo(){
   S.user = r.user; S.rutas = r.rutas; S.ruta = r.ruta || '';
   setProductos(r.productos); setClientes(r.clientes); aplicarDia(r.dia);
   if (!r.dia) S.fecha = r.fecha;
-  $('#navCatalogo').hidden = S.user.rol !== 'ADMIN';
-  if (S.user.rol !== 'ADMIN' && document.querySelector('#v-catalogo.on')) show('clientes');
+  const admin = S.user.rol === 'ADMIN';
+  ['#navCatalogo', '#navReportes', '#navRutas'].forEach(id => { $(id).hidden = !admin; });
+  $('#navMapa').hidden = false;
+  $('#navVender').hidden = admin;
+  M.fitted = false; M.hidden.clear(); M.sel.clear();
+  if (document.querySelector(admin ? '#v-vender.on' : '#v-catalogo.on, #v-reportes.on, #v-rutas.on')) show('clientes');
+  else if (document.querySelector('#v-mapa.on')) abrirMapa();
   $('#statusTxt').textContent = S.user.nombre + (S.user.rol === 'ADMIN' ? ', administrador' : ', repartidor');
   renderAll();
-  if (!S.ruta) openRuta();
+  if (!S.ruta && !admin) openRuta();
 }
 async function refrescarDia(){
   if (!S.ruta || !S.token) return;
@@ -506,21 +638,29 @@ async function refrescarDia(){
 
 /* ---------- navegación y ruta ---------- */
 function show(view){
-  if (view === 'catalogo' && (!S.user || S.user.rol !== 'ADMIN')) view = 'clientes';
+  const esAdmin = S.user && S.user.rol === 'ADMIN';
+  if (['catalogo', 'reportes', 'rutas'].includes(view) && !esAdmin) view = 'clientes';
+  if (view === 'vender' && esAdmin) view = 'clientes';
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + view));
   document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('on', b.dataset.view === view));
   window.scrollTo(0, 0);
+  if (view === 'mapa') abrirMapa();
+  if (view === 'reportes') abrirReportes();
+  if (view === 'rutas') abrirRutas();
 }
 function openRuta(){
-  if (S.user && S.user.ruta) { toast('Tu ruta la asigna el administrador en la hoja Usuarios.', 'warn'); return; }
-  if (!S.rutas.length) { toast('No hay rutas activas. Agrégalas en la hoja Rutas.', 'err'); return; }
+  if (S.user && S.user.rol === 'ADMIN') return;
+  if (S.user && S.user.ruta) { toast('Tu ruta la asigna el administrador.', 'warn'); return; }
+  if (!S.rutas.length) { toast('No hay rutas activas. Pide al administrador que cree una.', 'err'); return; }
   $('#rChips').innerHTML = S.rutas.map(r => `<button class="btn${r.id === S.ruta ? ' btn-primary' : ''}" data-act="pickRuta" data-r="${esc(r.id)}">${esc(r.nombre)}</button>`).join('');
   $('#mRuta').hidden = false;
 }
 async function setRuta(id){
   $('#mRuta').hidden = true;
   S.ruta = id; prefSet('ruta', id); S.cart = {}; S.clienteSel = ''; S.sug = null; S.cargaDirty = false; S.reqId = null;
-  renderAll();
+  M.fitted = false;
+  renderAll(); renderMapa();
+  if (document.querySelector('#v-mapa.on')) abrirMapa();
   try { await refrescarDia(); } catch(e){ fail(e); }
 }
 
@@ -556,19 +696,11 @@ function tomarUbicacion(){
   }, {enableHighAccuracy:true, timeout:20000, maximumAge:0});
 }
 const DIR_HINT = 'Se llena sola con la ubicación. Revísala y agrega referencias si hace falta.';
-function renderRutaSelect(){
-  const admin = S.user && S.user.rol === 'ADMIN';
-  $('#cRutaWrap').hidden = !admin;
-  if (!admin) return;
-  const cur = $('#cRuta').value || S.ruta;
-  $('#cRuta').innerHTML = S.rutas.map(r => `<option value="${esc(r.id)}"${r.id === cur ? ' selected' : ''}>${esc(r.nombre)}</option>`).join('');
-}
 function fillCliente(c){
-  S.editCliente = c ? c.id : null;
+  S.editCliente = c ? c.id : null; S.editClienteRuta = c ? c.ruta : null;
   $('#cNombre').value = c ? c.nombre : ''; $('#cTel').value = c ? c.telefono : ''; $('#cDir').value = c ? c.direccion : '';
   S.geo = c && c.lat != null ? {lat: c.lat, lng: c.lng, acc: c.precision, saved: true} : null;
   renderGeo();
-  $('#cRuta').value = ''; renderRutaSelect(); if (c) $('#cRuta').value = c.ruta;
   $('#cFormTitle').textContent = c ? 'Editar cliente' : 'Nuevo cliente';
   $('#cGeoTxt').textContent = c ? 'Volver a tomar ubicación' : 'Tomar ubicación del cliente';
   $('#cSave').textContent = c ? 'Guardar cambios' : 'Guardar cliente';
@@ -579,35 +711,47 @@ function fillCliente(c){
 async function saveCliente(b){
   const nombre = $('#cNombre').value.trim();
   if (!nombre) { toast('Escribe el nombre del cliente.', 'warn'); $('#cNombre').focus(); return; }
-  if (!S.ruta) { openRuta(); return; }
+  const esAdmin = S.user && S.user.rol === 'ADMIN';
+  if (!S.ruta && !esAdmin) { openRuta(); return; }
   const edit = S.editCliente;
   const g = S.geo && !S.geo.loading ? S.geo : null;
   if (!edit && !g && !(await confirmDlg('Este cliente no tiene ubicación. ¿Guardarlo así?', 'Guardar sin ubicación'))) return;
-  const admin = S.user && S.user.rol === 'ADMIN';
   const datos = {nombre, telefono: $('#cTel').value.trim(), direccion: $('#cDir').value.trim(),
     lat: g ? g.lat : null, lng: g ? g.lng : null, precision: g ? g.acc : null,
-    ruta: admin && $('#cRuta').value ? $('#cRuta').value : S.ruta};
+    ruta: edit ? S.editClienteRuta : (esAdmin ? '' : S.ruta)};
   b.disabled = true;
   try {
     const r = edit ? await call('actualizarCliente', Object.assign({id: edit}, datos)) : await call('guardarCliente', datos);
     setClientes(r.clientes); fillCliente(null); renderClientes(); renderClienteSelect();
-    toast(edit ? 'Cliente actualizado' : 'Cliente guardado', 'ok');
+    toast(edit ? 'Cliente actualizado' : esAdmin ? 'Cliente guardado sin ruta. Asígnasela desde el Mapa.' : 'Cliente guardado', 'ok');
   } catch(e){ fail(e); }
   b.disabled = false;
 }
 function renderClientes(){
-  const q = norm($('#cBuscar').value), todos = $('#cTodos').checked;
-  const list = S.clientes.filter(c => todos || c.ruta === S.ruta)
+  const admin = S.user && S.user.rol === 'ADMIN';
+  $('#cTodosWrap').hidden = admin; $('#cFiltro').hidden = !admin;
+  $('#cListTitle').textContent = admin ? 'Clientes' : 'Clientes de la ruta';
+  if (admin) {
+    const f = $('#cFiltro').value, sin = S.clientes.filter(c => !S.rutas.some(r => r.id === c.ruta)).length;
+    $('#cFiltro').innerHTML = `<option value="">Todas las rutas (${S.clientes.length})</option>` +
+      S.rutas.map(r => `<option value="${esc(r.id)}">${esc(r.nombre)} (${S.clientes.filter(c => c.ruta === r.id).length})</option>`).join('') +
+      (sin ? `<option value="__none">Sin ruta (${sin})</option>` : '');
+    $('#cFiltro').value = [...$('#cFiltro').options].some(o => o.value === f) ? f : '';
+  }
+  const filtro = $('#cFiltro').value;
+  const q = norm($('#cBuscar').value), todos = admin || $('#cTodos').checked;
+  const list = S.clientes.filter(c => admin
+      ? (!filtro || (filtro === '__none' ? !S.rutas.some(r => r.id === c.ruta) : c.ruta === filtro))
+      : (todos || c.ruta === S.ruta))
     .filter(c => !q || norm(c.nombre + ' ' + c.direccion).includes(q))
     .sort((a,b) => norm(a.nombre).localeCompare(norm(b.nombre)));
   if (!list.length) {
-    $('#cLista').innerHTML = `<p class="empty">${q ? 'Ningún cliente coincide con la búsqueda.' : 'Aún no hay clientes en esta ruta. Toma la ubicación arriba para dar de alta el primero.'}</p>`;
+    $('#cLista').innerHTML = `<p class="empty">${q ? 'Ningún cliente coincide con la búsqueda.' : admin ? 'No hay clientes con este filtro.' : 'Aún no hay clientes en esta ruta. Toma la ubicación arriba para dar de alta el primero.'}</p>`;
     return;
   }
-  const admin = S.user && S.user.rol === 'ADMIN';
   $('#cLista').innerHTML = list.map(c => `<article class="item">
     <div class="item-main"><strong>${esc(c.nombre)}</strong><span class="sub">${esc(c.direccion || 'Sin dirección')}</span>
-      ${todos ? `<span class="sub">${esc(rutaNombre(c.ruta))}</span>` : ''}${c.telefono ? `<span class="sub">Tel. ${esc(c.telefono)}</span>` : ''}</div>
+      ${todos ? (S.rutas.some(r => r.id === c.ruta) ? `<span class="sub"><i class="rt-dot" style="background:${colorRuta(c.ruta)}"></i>${esc(rutaNombre(c.ruta))}</span>` : `<span class="pill warn" style="margin-top:.2rem">Sin ruta</span>`) : ''}${c.telefono ? `<span class="sub">Tel. ${esc(c.telefono)}</span>` : ''}</div>
     <div class="item-actions">
       ${c.ruta === S.ruta || admin ? `<button class="btn btn-sm" data-act="editCliente" data-id="${esc(c.id)}">Editar</button>` : ''}
       ${c.lat != null ? `<a class="btn btn-sm" href="https://www.google.com/maps?q=${c.lat},${c.lng}" target="_blank" rel="noopener">Mapa</a>` : ''}
@@ -762,6 +906,11 @@ async function copyTicket(){
 
 /* ---------- carga ---------- */
 function renderCarga(){
+  const adm = S.user && S.user.rol === 'ADMIN';
+  $('#kRutaWrap').hidden = !adm;
+  if (adm) $('#kRuta').innerHTML = S.rutas.length
+    ? S.rutas.map(r => `<option value="${esc(r.id)}"${r.id === S.ruta ? ' selected' : ''}>${esc(r.nombre)}</option>`).join('')
+    : '<option value="">Crea una ruta primero</option>';
   $('#kInfo').textContent = S.ruta
     ? `${rutaNombre(S.ruta)}, ${new Date(S.fecha + 'T12:00:00').toLocaleDateString('es-MX',{weekday:'long', day:'numeric', month:'long'})}`
     : 'Elige una ruta para registrar su carga.';
@@ -894,12 +1043,522 @@ function handleCode(code, fromCam){
   }
 }
 
+/* ---------- mapa de clientes ---------- */
+const PALETA = ['#1D3F91','#E0323C','#2E9E44','#F2A81D','#8E44AD','#0FA3B1','#D35400','#C2185B','#5D6D7E','#7CB342','#6D4C41','#00897B'];
+const SIN_RUTA = '__none';
+const M = {map: null, layer: null, markers: {}, sel: new Set(), hidden: new Set(), fitted: false};
+// Color fijo por clave de ruta (R01, R02…), así no cambia cuando se crean o eliminan otras rutas
+const colorRuta = id => {
+  if (!S.rutas.some(r => r.id === id)) return '#9AA3B5';
+  const m = /^R(\d+)$/.exec(id || '');
+  const n = m ? Number(m[1]) - 1 : [...String(id)].reduce((a, ch) => a + ch.charCodeAt(0), 0);
+  return PALETA[n % PALETA.length];
+};
+const grupoDe = c => S.rutas.some(r => r.id === c.ruta) ? c.ruta : SIN_RUTA;
+const conUbicacion = () => S.clientes.filter(c => c.lat != null && c.lng != null);
+function estiloPunto(c){
+  const sel = M.sel.has(c.id);
+  return {radius: sel ? 11 : 8, color: sel ? '#F2A81D' : '#FFFFFF', weight: sel ? 4 : 2, fillColor: colorRuta(c.ruta), fillOpacity: .92};
+}
+function initMapa(){
+  if (M.map) return true;
+  if (typeof L === 'undefined') { $('#map').classList.add('map-off'); $('#map').textContent = 'No se pudo cargar el mapa. Revisa tu conexión y recarga la página.'; return false; }
+  M.map = L.map('map').setView([19.0414, -98.2063], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap'}).addTo(M.map);
+  M.layer = L.layerGroup().addTo(M.map);
+  M.map.on('popupopen', e => {
+    const el = e.popup.getElement(), btn = el && el.querySelector('[data-pop-asignar]');
+    if (btn) btn.onclick = () => asignarClientes([btn.dataset.id], el.querySelector('select').value);
+    const ven = el && el.querySelector('[data-pop-vender]');
+    if (ven) ven.onclick = () => {
+      M.map.closePopup(); S.clienteSel = ven.dataset.id; renderClienteSelect(); calcSugerido(); show('vender');
+    };
+  });
+  return true;
+}
+function popupHTML(c){
+  if (!esAdminMapa()) {
+    return `<div class="lp-pop"><strong>${esc(c.nombre)}</strong>
+      <div class="sub">${esc(c.direccion || 'Sin dirección')}</div>
+      ${c.telefono ? `<div class="sub">Tel. ${esc(c.telefono)}</div>` : ''}
+      <div class="pop-row"><a class="btn btn-sm" style="flex:1;text-decoration:none" target="_blank" rel="noopener"
+        href="https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}">Cómo llegar</a>
+        <button class="btn btn-sm" style="flex:1" data-pop-vender data-id="${esc(c.id)}">Vender</button></div></div>`;
+  }
+  const opts = S.rutas.map(r => `<option value="${esc(r.id)}"${r.id === c.ruta ? ' selected' : ''}>${esc(r.nombre)}</option>`).join('');
+  return `<div class="lp-pop"><strong>${esc(c.nombre)}</strong>
+    <div class="sub">${esc(c.direccion || 'Sin dirección')}</div>
+    <div class="sub">Ruta actual: <b>${esc(S.rutas.some(r => r.id === c.ruta) ? rutaNombre(c.ruta) : 'Sin ruta')}</b></div>
+    <div class="sub">${M.sel.has(c.id) ? 'Seleccionado para asignar' : 'No seleccionado'}</div>
+    <div class="pop-row"><select aria-label="Ruta">${opts}</select><button class="btn btn-sm" data-pop-asignar data-id="${esc(c.id)}">Asignar</button></div></div>`;
+}
+function renderSel(){
+  const n = M.sel.size;
+  $('#mSelCount').textContent = n === 1 ? '1 seleccionado' : n + ' seleccionados';
+  $('#mAsignar').disabled = !n;
+}
+const esAdminMapa = () => !!(S.user && S.user.rol === 'ADMIN');
+function renderMapa(){
+  const admin = esAdminMapa();
+  $('#mAssign').hidden = !admin; $('#mLegend').hidden = !admin;
+  $('#mTitle').textContent = admin ? 'Mapa de clientes' : (S.ruta ? 'Clientes de ' + rutaNombre(S.ruta) : 'Mapa de clientes');
+  if (!admin) M.sel.clear();
+  const base = admin ? S.clientes : S.clientes.filter(c => S.ruta && c.ruta === S.ruta);
+  const geo = base.filter(c => c.lat != null && c.lng != null), sinGeo = base.length - geo.length;
+  const counts = {};
+  geo.forEach(c => { const k = grupoDe(c); counts[k] = (counts[k] || 0) + 1; });
+  const grupos = S.rutas.map(r => ({id: r.id, nombre: r.nombre, color: colorRuta(r.id)}));
+  if (counts[SIN_RUTA]) grupos.push({id: SIN_RUTA, nombre: 'Sin ruta', color: '#9AA3B5'});
+  $('#mLegend').innerHTML = grupos.map(g => `<button class="legend-chip${M.hidden.has(g.id) ? ' off' : ''}" data-act="mapToggleRuta" data-r="${esc(g.id)}" aria-pressed="${!M.hidden.has(g.id)}"><i style="background:${g.color}"></i>${esc(g.nombre)} <b>${counts[g.id] || 0}</b></button>`).join('');
+  const sinTxt = sinGeo ? `, ${sinGeo} sin ubicación (tómala desde Editar en Clientes)` : '';
+  $('#mInfo').textContent = !admin && !S.ruta ? 'Aún no tienes una ruta asignada.'
+    : !geo.length ? (admin ? 'Aún no hay clientes con ubicación.' : 'Tu ruta aún no tiene clientes con ubicación.')
+    : admin ? `${geo.length} ${geo.length === 1 ? 'cliente' : 'clientes'} en el mapa${sinTxt}. Toca los puntos para seleccionarlos; toca una ruta arriba para ocultarla o mostrarla.`
+    : `${geo.length} ${geo.length === 1 ? 'cliente' : 'clientes'} de tu ruta${sinTxt}. Toca un punto para ver cómo llegar o venderle.`;
+  const cur = $('#mRutaDest').value;
+  $('#mRutaDest').innerHTML = S.rutas.map(r => `<option value="${esc(r.id)}"${r.id === cur ? ' selected' : ''}>${esc(r.nombre)}</option>`).join('');
+  [...M.sel].forEach(id => { if (!geo.some(c => c.id === id)) M.sel.delete(id); });
+  renderSel();
+  if (!M.map) return;
+  M.layer.clearLayers(); M.markers = {};
+  geo.forEach(c => {
+    if (admin && M.hidden.has(grupoDe(c))) return;
+    const m = L.circleMarker([c.lat, c.lng], estiloPunto(c));
+    if (admin) m.on('click', () => { if (M.sel.has(c.id)) M.sel.delete(c.id); else M.sel.add(c.id); m.setStyle(estiloPunto(c)); renderSel(); });
+    m.bindPopup(() => popupHTML(c), {autoPan: true});
+    m.bindTooltip(esc(c.nombre), {direction: 'top', offset: [0, -8]});
+    m.addTo(M.layer); M.markers[c.id] = m;
+  });
+}
+function miUbicacion(){
+  if (!M.map) return;
+  if (!navigator.geolocation) { toast('Este navegador no permite leer la ubicación.', 'err'); return; }
+  toast('Buscando tu ubicación…');
+  navigator.geolocation.getCurrentPosition(pos => {
+    const ll = [pos.coords.latitude, pos.coords.longitude];
+    if (M.yo) M.yo.forEach(x => x.remove());
+    M.yo = [
+      L.circle(ll, {radius: Math.min(pos.coords.accuracy, 300), color: '#1A73E8', weight: 1, fillColor: '#1A73E8', fillOpacity: .12, interactive: false}).addTo(M.map),
+      L.circleMarker(ll, {radius: 8, color: '#FFFFFF', weight: 3, fillColor: '#1A73E8', fillOpacity: 1}).bindTooltip('Estás aquí').addTo(M.map)
+    ];
+    M.map.setView(ll, Math.max(M.map.getZoom(), 15));
+    $('#toast').hidden = true;
+  }, err => {
+    toast(err.code === 1 ? 'Permiso de ubicación denegado. Actívalo en el navegador.' : 'No se pudo leer tu ubicación.', 'err');
+  }, {enableHighAccuracy: true, timeout: 15000, maximumAge: 30000});
+}
+function ajustarMapa(){
+  if (!M.map) return;
+  const pts = Object.values(M.markers).map(m => m.getLatLng());
+  if (pts.length === 1) M.map.setView(pts[0], 16);
+  else if (pts.length) M.map.fitBounds(L.latLngBounds(pts), {padding: [30, 30], maxZoom: 16});
+}
+function abrirMapa(){
+  if (!initMapa()) return;
+  renderMapa();
+  setTimeout(() => { M.map.invalidateSize(); if (!M.fitted) { ajustarMapa(); M.fitted = true; } }, 80);
+}
+async function asignarClientes(ids, ruta){
+  if (!ids.length || !ruta) return;
+  const btn = $('#mAsignar'); btn.disabled = true;
+  try {
+    const r = await call('asignarRuta', ids, ruta);
+    M.sel.clear(); if (M.map) M.map.closePopup();
+    setClientes(r.clientes); renderClientes(); renderClienteSelect();
+    toast(`${r.asignados} ${r.asignados === 1 ? 'cliente asignado' : 'clientes asignados'} a ${rutaNombre(ruta)}`, 'ok');
+  } catch(e){ fail(e); }
+  renderSel();
+}
+
+/* ---------- administración de rutas ---------- */
+const RT = {admin: [], repartidores: [], sinRuta: 0, edit: null, cargado: false};
+async function abrirRutas(){
+  if (!RT.cargado) $('#rtLista').innerHTML = '<p class="empty">Cargando rutas…</p>';
+  try { aplicarRutas(await call('rutas')); } catch(e){ fail(e); }
+}
+function aplicarRutas(r){
+  RT.admin = r.admin; RT.repartidores = r.repartidores; RT.sinRuta = r.sinRuta; RT.cargado = true;
+  S.rutas = r.rutas;
+  const rutaValida = S.rutas.some(x => x.id === S.ruta);
+  if (!rutaValida) { S.ruta = S.rutas[0] ? S.rutas[0].id : ''; prefSet('ruta', S.ruta); S.cargaDirty = false; }
+  setClientes(r.clientes);
+  R.data = null;
+  renderAll(); renderRutas();
+  if (!rutaValida) refrescarDia().catch(() => {});
+}
+function rtFill(r){
+  RT.edit = r ? r.id : null;
+  $('#rtNombre').value = r ? r.nombre : '';
+  $('#rtActiva').checked = r ? r.activa : true;
+  $('#rtActivaWrap').hidden = !r;
+  $('#rtFormTitle').textContent = r ? 'Editar ruta' : 'Nueva ruta';
+  $('#rtSave').textContent = r ? 'Guardar cambios' : 'Crear ruta';
+  $('#rtCancel').hidden = !r;
+  renderRtReps(r ? r.repartidores : []);
+}
+function renderRtReps(marcados){
+  const nom = id => (RT.admin.find(x => x.id === id) || {}).nombre || id;
+  $('#rtReps').innerHTML = RT.repartidores.length ? RT.repartidores.map(u => `<label class="check-item">
+      <input type="checkbox" value="${esc(u.usuario)}"${marcados.includes(u.usuario) ? ' checked' : ''}>
+      <span><strong>${esc(u.nombre || u.usuario)}</strong> <span class="sub">${u.ruta && u.ruta !== RT.edit ? 'ahora en ' + esc(nom(u.ruta)) : u.ruta ? '' : 'sin ruta'}</span></span></label>`).join('')
+    : '<p class="hint">Aún no hay repartidores dados de alta.</p>';
+}
+function renderRutas(){
+  const lista = RT.admin.slice().sort((a, b) => (b.activa - a.activa) || norm(a.nombre).localeCompare(norm(b.nombre)));
+  const act = lista.filter(r => r.activa).length;
+  $('#rtCount').textContent = lista.length ? `${act} activas${lista.length > act ? `, ${lista.length - act} inactivas` : ''}` : '';
+  $('#rtSinRuta').innerHTML = RT.sinRuta ? `<div class="banner" style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap">
+      <span><b>${RT.sinRuta}</b> ${RT.sinRuta === 1 ? 'cliente no tiene' : 'clientes no tienen'} ruta asignada.</span>
+      <button class="btn btn-sm" data-act="rtVerMapa" data-r="${SIN_RUTA}">Asignar en el mapa</button></div>` : '';
+  if (!RT.edit) renderRtReps([]);
+  $('#rtLista').innerHTML = lista.length ? lista.map(r => {
+    const reps = r.repartidores.map(u => (RT.repartidores.find(x => x.usuario === u) || {}).nombre || u);
+    return `<article class="item"${r.activa ? '' : ' style="opacity:.7"'}>
+      <div class="item-main">
+        <strong><i class="rt-dot" style="background:${r.activa ? colorRuta(r.id) : '#9AA3B5'}"></i>${esc(r.nombre)}
+          <span class="pill ${r.activa ? 'ok' : ''}" style="margin-left:.3rem">${r.activa ? 'Activa' : 'Inactiva'}</span></strong>
+        <span class="sub">${r.clientes} ${r.clientes === 1 ? 'cliente' : 'clientes'}${r.clientes ? `, ${r.conUbicacion} con ubicación` : ''}</span>
+        <span class="sub">${reps.length ? 'Repartidor: ' + esc(reps.join(', ')) : 'Sin repartidor asignado'}</span>
+        <span class="sub">Clave ${esc(r.id)}</span>
+      </div>
+      <div class="item-actions">
+        <button class="btn btn-sm" data-act="rtEdit" data-r="${esc(r.id)}">Editar</button>
+        ${r.activa && r.clientes ? `<button class="btn btn-sm" data-act="rtVerMapa" data-r="${esc(r.id)}">Mapa</button>` : ''}
+        <button class="btn btn-sm btn-danger" data-act="rtDel" data-r="${esc(r.id)}">Eliminar</button>
+      </div></article>`;
+  }).join('') : '<p class="empty">Aún no hay rutas. Crea la primera arriba.</p>';
+}
+async function rtSave(b){
+  const nombre = $('#rtNombre').value.trim();
+  if (!nombre) { toast('Escribe el nombre de la ruta.', 'warn'); $('#rtNombre').focus(); return; }
+  const repartidores = [...document.querySelectorAll('#rtReps input:checked')].map(i => i.value);
+  const activa = RT.edit ? $('#rtActiva').checked : true;
+  if (RT.edit && !activa) {
+    const r = RT.admin.find(x => x.id === RT.edit);
+    if (r && r.activa && !(await confirmDlg(`Al desactivar "${r.nombre}" dejará de aparecer para cargar y vender, y sus repartidores quedarán sin ruta. Sus clientes conservan la ruta por si la reactivas. ¿Continuar?`, 'Desactivar'))) return;
+  }
+  const edit = RT.edit; b.disabled = true;
+  try {
+    const r = await call('guardarRuta', {id: edit || '', nombre, activa, repartidores});
+    rtFill(null); aplicarRutas(r);
+    toast(edit ? 'Ruta actualizada' : `Ruta "${nombre}" creada`, 'ok');
+  } catch(e){ fail(e); }
+  b.disabled = false;
+}
+async function rtDel(id){
+  const r = RT.admin.find(x => x.id === id); if (!r) return;
+  const ok = await confirmDlg(`¿Eliminar la ruta "${r.nombre}"?${r.clientes ? ` Sus ${r.clientes} clientes quedarán sin ruta para que los reasignes en el Mapa.` : ''} Si la ruta ya tiene ventas o cargas, solo se desactivará para conservar los reportes.`, 'Eliminar');
+  if (!ok) return;
+  try {
+    const res = await call('eliminarRuta', id);
+    if (RT.edit === id) rtFill(null);
+    aplicarRutas(res);
+    toast(res.resultado === 'eliminada' ? `Ruta "${r.nombre}" eliminada` : `"${r.nombre}" tenía historial, así que se desactivó`, 'ok');
+  } catch(e){ fail(e); }
+}
+
+/* ---------- reportes ---------- */
+const pd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d, 12); };
+const fd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const addD = (s, n) => { const d = pd(s); d.setDate(d.getDate() + n); return fd(d); };
+const diffD = (a, b) => Math.round((pd(b) - pd(a)) / 86400000);
+const fCorta = s => pd(s).toLocaleDateString('es-MX', {day: 'numeric', month: 'short'});
+const fLarga = s => pd(s).toLocaleDateString('es-MX', {weekday: 'short', day: 'numeric', month: 'short'});
+const compacto = n => n >= 1e6 ? '$' + (n / 1e6).toFixed(1) + 'M' : n >= 1000 ? '$' + (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k' : '$' + Math.round(n);
+const nfmt = n => Math.round(n).toLocaleString('es-MX');
+const R = {preset: 'mes', desde: '', hasta: '', pDesde: '', pHasta: '', ruta: '', usuario: '', data: null, rango: null, at: 0,
+  inact: 15, prodBy: 'importe', cliBy: 'importe', serie: [], verN: 10};
+
+function rangoPreset(p){
+  const h = hoyLocal(), d = pd(h);
+  if (p === 'hoy') return [h, h];
+  if (p === 'ayer') { const a = addD(h, -1); return [a, a]; }
+  if (p === '7d') return [addD(h, -6), h];
+  if (p === '30d') return [addD(h, -29), h];
+  if (p === 'mes') return [fd(new Date(d.getFullYear(), d.getMonth(), 1, 12)), h];
+  if (p === 'mesant') return [fd(new Date(d.getFullYear(), d.getMonth() - 1, 1, 12)), fd(new Date(d.getFullYear(), d.getMonth(), 0, 12))];
+  if (p === 'anio') return [d.getFullYear() + '-01-01', h];
+  return [R.desde || h, R.hasta || h];
+}
+/** Periodo de comparación: mes contra mes y año contra año cuando aplica; si no, el mismo número de días justo antes. */
+function rangoAnterior(p, d, h){
+  const D1 = pd(d), H1 = pd(h);
+  if (p === 'mes' || p === 'mesant') {
+    const ini = new Date(D1.getFullYear(), D1.getMonth() - 1, 1, 12);
+    const finMes = new Date(D1.getFullYear(), D1.getMonth(), 0, 12);
+    const fin = p === 'mesant' ? finMes : new Date(Math.min(finMes, new Date(ini.getFullYear(), ini.getMonth(), H1.getDate(), 12)));
+    return [fd(ini), fd(fin)];
+  }
+  if (p === 'anio') return [(D1.getFullYear() - 1) + d.slice(4), (H1.getFullYear() - 1) + h.slice(4)];
+  const len = diffD(d, h) + 1;
+  return [addD(d, -len), addD(d, -1)];
+}
+function abrirReportes(){ if (!R.data) cargarReporte(false); }
+async function cargarReporte(forzar){
+  const [d, h] = rangoPreset(R.preset);
+  if (d > h) { toast('La fecha inicial debe ser anterior a la final.', 'warn'); return; }
+  R.desde = d; R.hasta = h; R.verN = 10;
+  [R.pDesde, R.pHasta] = rangoAnterior(R.preset, d, h);
+  $('#rDesde').value = d; $('#rHasta').value = h;
+  document.querySelectorAll('#rPresets button').forEach(b => b.classList.toggle('on', b.dataset.p === R.preset));
+  const cubierto = R.data && R.rango && R.rango[0] <= R.pDesde && R.rango[1] >= h && Date.now() - R.at < 120000;
+  if (cubierto && !forzar) { renderReporte(); return; }
+  $('#rBody').innerHTML = `<div class="card rep-empty">Cargando reporte…</div>`;
+  try {
+    R.data = await call('reporte', R.pDesde, h);
+    R.rango = [R.pDesde, h]; R.at = Date.now();
+    renderReporte();
+  } catch(e){ $('#rBody').innerHTML = `<div class="card rep-empty">No se pudo cargar el reporte.</div>`; fail(e); }
+}
+
+function calcularReporte(){
+  const D = R.data;
+  const cli = {}; D.clientes.forEach(c => { cli[c.id] = c; });
+  const det = {}; D.detalle.forEach(x => { (det[x[0]] = det[x[0]] || []).push(x); });
+  const pasa = v => (!R.ruta || v[3] === R.ruta) && (!R.usuario || v[5] === R.usuario);
+  const cur = D.ventas.filter(v => pasa(v) && v[1] >= R.desde && v[1] <= R.hasta);
+  const prev = D.ventas.filter(v => pasa(v) && v[1] >= R.pDesde && v[1] <= R.pHasta);
+  const agg = list => {
+    let total = 0, piezas = 0; const c = new Set();
+    list.forEach(v => { total += v[6]; c.add(v[4]); (det[v[0]] || []).forEach(x => { piezas += x[5]; }); });
+    return {total, tickets: list.length, prom: list.length ? total / list.length : 0, piezas, clientes: c.size};
+  };
+  const nuevosEn = (a, b) => D.clientes.filter(c => c.alta >= a && c.alta <= b && (!R.ruta || c.ruta === R.ruta)).length;
+  const A = agg(cur), P = agg(prev);
+  A.nuevos = nuevosEn(R.desde, R.hasta); P.nuevos = nuevosEn(R.pDesde, R.pHasta);
+
+  // Serie de tiempo (día, semana o mes según el largo del periodo)
+  const n = diffD(R.desde, R.hasta) + 1;
+  const modo = n <= 45 ? 'dia' : n <= 200 ? 'semana' : 'mes';
+  const llave = f => modo === 'dia' ? f : modo === 'mes' ? f.slice(0, 7) : addD(f, -((pd(f).getDay() + 6) % 7));
+  const serie = [], idx = {};
+  for (let f = R.desde; f <= R.hasta; f = addD(f, 1)) {
+    const k = llave(f);
+    if (!(k in idx)) { idx[k] = serie.length; serie.push({k, total: 0, tickets: 0}); }
+  }
+  cur.forEach(v => { const b = serie[idx[llave(v[1])]]; if (b) { b.total += v[6]; b.tickets++; } });
+  serie.forEach(b => {
+    b.label = modo === 'dia' ? fLarga(b.k) : modo === 'mes' ? pd(b.k + '-01').toLocaleDateString('es-MX', {month: 'long', year: 'numeric'}) : 'Semana del ' + fCorta(b.k);
+    b.corto = modo === 'dia' ? String(pd(b.k).getDate()) : modo === 'mes' ? pd(b.k + '-01').toLocaleDateString('es-MX', {month: 'short'}) : fCorta(b.k);
+  });
+
+  // Día de la semana
+  const dows = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(n => ({n, total: 0, tickets: 0}));
+  cur.forEach(v => { const w = dows[(pd(v[1]).getDay() + 6) % 7]; w.total += v[6]; w.tickets++; });
+
+  // Rutas
+  const rutaN = id => (D.rutas.find(r => r.id === id) || {}).nombre || id || 'Sin ruta';
+  const rutas = {};
+  const rt = id => rutas[id] = rutas[id] || {id, nombre: rutaN(id), total: 0, tickets: 0, clientes: new Set(), vendido: 0, cargado: 0};
+  cur.forEach(v => { const r = rt(v[3]); r.total += v[6]; r.tickets++; r.clientes.add(v[4]); (det[v[0]] || []).forEach(x => { r.vendido += x[5]; }); });
+  D.cargas.forEach(c => { if (c[0] >= R.desde && c[0] <= R.hasta && (!R.ruta || c[1] === R.ruta)) rt(c[1]).cargado += c[3]; });
+  const activos = {}; D.clientes.forEach(c => { if (c.activo) activos[c.ruta] = (activos[c.ruta] || 0) + 1; });
+  const listaRutas = Object.values(rutas).sort((a, b) => b.total - a.total);
+  listaRutas.forEach(r => { r.cartera = activos[r.id] || 0; });
+
+  // Productos
+  const prods = {};
+  cur.forEach(v => (det[v[0]] || []).forEach(x => {
+    const p = prods[x[1]] = prods[x[1]] || {codigo: x[1], nombre: x[2], gramaje: x[3], piezas: 0, importe: 0};
+    p.piezas += x[5]; p.importe += x[6];
+  }));
+  const listaProds = Object.values(prods);
+
+  // Clientes
+  const clis = {};
+  cur.forEach(v => {
+    const c = clis[v[4]] = clis[v[4]] || {id: v[4], nombre: (cli[v[4]] || {}).nombre || v[4], ruta: rutaN((cli[v[4]] || {}).ruta || v[3]), total: 0, tickets: 0};
+    c.total += v[6]; c.tickets++;
+  });
+  const listaClis = Object.values(clis);
+
+  // Repartidores
+  const userN = u => (D.usuarios.find(x => x.usuario === u) || {}).nombre || u;
+  const reps = {};
+  cur.forEach(v => { const r = reps[v[5]] = reps[v[5]] || {u: v[5], nombre: userN(v[5]), total: 0, tickets: 0}; r.total += v[6]; r.tickets++; });
+
+  // Clientes por visitar (sin compra en N días, histórico)
+  const limite = addD(D.hoy, -R.inact);
+  const inactivos = D.clientes.filter(c => c.activo && (!R.ruta || c.ruta === R.ruta))
+    .map(c => ({c, ult: D.ultima[c.id] || ''}))
+    .filter(x => !x.ult || x.ult < limite)
+    .map(x => ({...x, dias: x.ult ? diffD(x.ult, D.hoy) : null, ruta: rutaN(x.c.ruta)}))
+    .sort((a, b) => (b.dias === null ? 1e9 : b.dias) - (a.dias === null ? 1e9 : a.dias));
+
+  return {cur, A, P, serie, modo, dows, listaRutas, listaProds, listaClis, reps: Object.values(reps).sort((a, b) => b.total - a.total),
+    inactivos, det, cli, rutaN, userN};
+}
+
+function delta(a, b){
+  if (!b) return `<em class="flat">${a ? 'Sin periodo previo para comparar' : 'Sin cambios'}</em>`;
+  const p = (a - b) / b * 100;
+  if (Math.abs(p) < 0.5) return `<em class="flat">Igual que el periodo anterior</em>`;
+  return `<em class="${p > 0 ? 'up' : 'down'}">${p > 0 ? '▲' : '▼'} ${Math.abs(p).toFixed(Math.abs(p) < 10 ? 1 : 0)}% vs anterior</em>`;
+}
+function hbars(items, valor, etiqueta, extra){
+  const max = Math.max(...items.map(valor), 0) || 1;
+  return items.map(it => `<div class="hbar"><div class="hbar-top"><span>${etiqueta(it)}</span><b>${extra ? extra(it) : ''}</b></div>
+    <div class="track"><div class="fill" style="width:${Math.max(2, valor(it) / max * 100).toFixed(1)}%"></div></div></div>`).join('');
+}
+function graficaSerie(serie){
+  const W = 480, H = 210, L = 52, B = 28, T = 12, Rr = 6;
+  const max = Math.max(...serie.map(b => b.total), 0);
+  const top = max ? Math.pow(10, Math.floor(Math.log10(max))) * Math.ceil(max / Math.pow(10, Math.floor(Math.log10(max)))) : 100;
+  const n = serie.length, cw = (W - L - Rr) / n, bw = Math.max(2, Math.min(36, cw * 0.7));
+  const y = v => T + (H - T - B) * (1 - v / top);
+  let g = '';
+  [0, .5, 1].forEach(f => { const v = top * f, yy = y(v);
+    g += `<line x1="${L}" x2="${W - Rr}" y1="${yy}" y2="${yy}" stroke="var(--line)" stroke-width="1"/>
+          <text x="${L - 6}" y="${yy + 5}" text-anchor="end" font-size="14" fill="var(--muted)">${compacto(v)}</text>`; });
+  const paso = Math.ceil(n / 7);
+  const iMax = serie.findIndex(b => b.total === max && max > 0);
+  serie.forEach((b, i) => {
+    const x = L + i * cw + (cw - bw) / 2, yy = y(b.total), h = Math.max(0, H - B - yy);
+    g += `<rect x="${L + i * cw}" y="${T}" width="${cw}" height="${H - B - T}" fill="transparent" data-bar="${i}"/>
+          <rect x="${x}" y="${yy}" width="${bw}" height="${h}" rx="${Math.min(4, bw / 3)}" fill="${i === iMax ? 'var(--mango)' : 'var(--cobalt-btn)'}" pointer-events="none"/>`;
+    if (i % paso === 0 || n <= 8) g += `<text x="${L + i * cw + cw / 2}" y="${H - 8}" text-anchor="middle" font-size="13" fill="var(--muted)">${esc(b.corto)}</text>`;
+  });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Ventas en el periodo">${g}</svg>`;
+}
+
+function renderReporte(){
+  const D = R.data; if (!D) return;
+  // filtros
+  const rv = R.ruta, uv = R.usuario;
+  $('#rRuta').innerHTML = `<option value="">Todas las rutas</option>` + D.rutas.map(r => `<option value="${esc(r.id)}"${r.id === rv ? ' selected' : ''}>${esc(r.nombre)}${r.activa ? '' : ' (inactiva)'}</option>`).join('');
+  $('#rUsuario').innerHTML = `<option value="">Todos</option>` + D.usuarios.map(u => `<option value="${esc(u.usuario)}"${u.usuario === uv ? ' selected' : ''}>${esc(u.nombre || u.usuario)}</option>`).join('');
+
+  const X = calcularReporte(), A = X.A, P = X.P;
+  R.serie = X.serie;
+  const rangoTxt = R.desde === R.hasta ? fLarga(R.desde) : `${fCorta(R.desde)} al ${fCorta(R.hasta)}`;
+  const prevTxt = R.pDesde === R.pHasta ? fLarga(R.pDesde) : `${fCorta(R.pDesde)} al ${fCorta(R.pHasta)}`;
+  const filtroTxt = [R.ruta ? X.rutaN(R.ruta) : '', R.usuario ? X.userN(R.usuario) : ''].filter(Boolean).join(', ');
+
+  let resumen;
+  if (!A.tickets) {
+    resumen = `No hay ventas del <b>${rangoTxt}</b>${filtroTxt ? ' para ' + esc(filtroTxt) : ''}.`;
+  } else {
+    const dif = P.total ? (A.total - P.total) / P.total * 100 : null;
+    const topR = X.listaRutas[0], topP = X.listaProds.slice().sort((a, b) => b.piezas - a.piezas)[0];
+    const mejorDia = X.modo === 'dia' ? X.serie.slice().sort((a, b) => b.total - a.total)[0] : null;
+    resumen = `Del <b>${rangoTxt}</b> vendiste <b>${money(A.total)}</b> en ${nfmt(A.tickets)} ${A.tickets === 1 ? 'ticket' : 'tickets'}`
+      + (dif === null ? '.' : `, <b class="${dif >= 0 ? 'up' : 'down'}">${dif >= 0 ? '+' : ''}${dif.toFixed(1)}%</b> frente al periodo anterior.`)
+      + (!R.ruta && topR && X.listaRutas.length > 1 ? ` La ruta que más vendió fue <b>${esc(topR.nombre)}</b> (${money(topR.total)}).` : '')
+      + (topP ? ` El producto estrella fue <b>${esc(topP.nombre)}</b> con ${nfmt(topP.piezas)} piezas.` : '')
+      + (mejorDia && X.serie.length > 1 ? ` Tu mejor día fue el ${esc(mejorDia.label)}.` : '');
+  }
+
+  const kpi = (t, v, a, b) => `<div class="kpi"><span>${t}</span><b>${v}</b>${delta(a, b)}</div>`;
+  const prodsOrd = X.listaProds.slice().sort((a, b) => R.prodBy === 'piezas' ? b.piezas - a.piezas : b.importe - a.importe).slice(0, 10);
+  const clisOrd = X.listaClis.slice().sort((a, b) => R.cliBy === 'tickets' ? b.tickets - a.tickets || b.total - a.total : b.total - a.total).slice(0, 10);
+  const totalRutas = X.listaRutas.reduce((s, r) => s + r.total, 0) || 1;
+  const dowMax = Math.max(...X.dows.map(d => d.total));
+
+  const inactMost = X.inactivos.slice(0, 25);
+  const ventasLista = X.cur.slice().sort((a, b) => b[2] < a[2] ? -1 : 1).slice(0, R.verN);
+
+  $('#rBody').innerHTML = `
+    <div class="card rep-sum">${resumen}
+      <div class="rep-range">Comparado con ${prevTxt}${filtroTxt ? '. Filtro: ' + esc(filtroTxt) : ''}</div></div>
+
+    <div class="kpis">
+      ${kpi('Venta total', money(A.total), A.total, P.total)}
+      ${kpi('Tickets', nfmt(A.tickets), A.tickets, P.tickets)}
+      ${kpi('Ticket promedio', money(A.prom), A.prom, P.prom)}
+      ${kpi('Piezas vendidas', nfmt(A.piezas), A.piezas, P.piezas)}
+      ${kpi('Clientes atendidos', nfmt(A.clientes), A.clientes, P.clientes)}
+      ${kpi('Clientes nuevos', nfmt(A.nuevos), A.nuevos, P.nuevos)}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Ventas por ${X.modo === 'dia' ? 'día' : X.modo === 'semana' ? 'semana' : 'mes'}</h2></div>
+      ${A.tickets ? graficaSerie(X.serie) + `<p class="chart-cap" id="rCap">Toca una barra para ver su detalle.</p>` : '<p class="rep-empty">Sin ventas en el periodo.</p>'}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Rutas</h2><span class="hint" style="margin:0">venta, cobertura y aprovechamiento de carga</span></div>
+      ${X.listaRutas.length ? X.listaRutas.map(r => {
+          const maxR = X.listaRutas[0].total || 1;
+          const cob = r.cartera ? Math.round(r.clientes.size / r.cartera * 100) : null;
+          const apr = r.cargado ? Math.round(r.vendido / r.cargado * 100) : null;
+          return `<div class="hbar"><div class="hbar-top"><span><strong>${esc(r.nombre)}</strong></span><b>${money(r.total)}</b></div>
+            <div class="track"><div class="fill" style="width:${Math.max(2, r.total / maxR * 100).toFixed(1)}%;background:${colorRuta(r.id)}"></div></div>
+            <div class="sub">${Math.round(r.total / totalRutas * 100)}% de la venta, ${r.tickets} tickets, ${r.clientes.size} de ${r.cartera} clientes atendidos${cob !== null ? ` (${cob}%)` : ''}.</div>
+            <div style="margin-top:.25rem">${apr !== null ? `<span class="pill ${apr >= 85 ? 'ok' : apr < 60 ? 'warn' : ''}">Vendió ${apr}% de la carga (${nfmt(r.vendido)} de ${nfmt(r.cargado)} pzs)</span>` : '<span class="pill">Sin carga registrada</span>'}</div></div>`;
+        }).join('') : '<p class="rep-empty">Sin ventas en el periodo.</p>'}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Productos más vendidos</h2>
+        <div class="mini-seg"><button class="${R.prodBy === 'importe' ? 'on' : ''}" data-act="repProdBy" data-v="importe">$</button><button class="${R.prodBy === 'piezas' ? 'on' : ''}" data-act="repProdBy" data-v="piezas">Piezas</button></div></div>
+      ${prodsOrd.length ? hbars(prodsOrd, p => R.prodBy === 'piezas' ? p.piezas : p.importe,
+          p => `${esc(p.nombre)} <span class="sub" style="display:inline">${p.gramaje} g</span>`,
+          p => R.prodBy === 'piezas' ? nfmt(p.piezas) + ' pzs' : money(p.importe)) : '<p class="rep-empty">Sin ventas en el periodo.</p>'}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Mejores clientes</h2>
+        <div class="mini-seg"><button class="${R.cliBy === 'importe' ? 'on' : ''}" data-act="repCliBy" data-v="importe">$</button><button class="${R.cliBy === 'tickets' ? 'on' : ''}" data-act="repCliBy" data-v="tickets">Visitas</button></div></div>
+      ${clisOrd.length ? hbars(clisOrd, c => R.cliBy === 'tickets' ? c.tickets : c.total,
+          c => `${esc(c.nombre)} <span class="sub" style="display:inline">${esc(c.ruta)}</span>`,
+          c => R.cliBy === 'tickets' ? c.tickets + (c.tickets === 1 ? ' compra' : ' compras') : money(c.total)) : '<p class="rep-empty">Sin ventas en el periodo.</p>'}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Clientes por visitar</h2>
+        <div class="mini-seg">${[7, 15, 30].map(n => `<button class="${R.inact === n ? 'on' : ''}" data-act="repInact" data-v="${n}">${n} días</button>`).join('')}</div></div>
+      <p class="hint" style="margin-top:0">${X.inactivos.length ? `${X.inactivos.length} ${X.inactivos.length === 1 ? 'cliente lleva' : 'clientes llevan'} ${R.inact} días o más sin comprar, o nunca han comprado.` : `Todos los clientes han comprado en los últimos ${R.inact} días.`}</p>
+      ${inactMost.map(x => `<div class="hbar"><div class="hbar-top"><span><strong>${esc(x.c.nombre)}</strong></span>
+          <b><span class="pill ${x.dias === null ? '' : 'warn'}">${x.dias === null ? 'Nunca ha comprado' : x.dias + ' días'}</span></b></div>
+          <div class="sub">${esc(x.ruta)}${x.ult ? ', última compra ' + fCorta(x.ult) : ''}</div></div>`).join('')}
+      ${X.inactivos.length > inactMost.length ? `<p class="hint">y ${X.inactivos.length - inactMost.length} más.</p>` : ''}
+    </div>
+
+    ${X.reps.length > 1 || R.usuario ? `<div class="card"><div class="card-head"><h2>Por repartidor</h2></div>
+      ${hbars(X.reps, r => r.total, r => `<strong>${esc(r.nombre)}</strong> <span class="sub" style="display:inline">${r.tickets} tickets</span>`, r => money(r.total))}</div>` : ''}
+
+    <div class="card">
+      <div class="card-head"><h2>Ventas por día de la semana</h2></div>
+      ${A.tickets ? X.dows.map(d => `<div class="hbar"><div class="hbar-top"><span>${d.n}</span><b>${money(d.total)}</b></div>
+        <div class="track"><div class="fill" style="width:${dowMax ? Math.max(d.total ? 2 : 0, d.total / dowMax * 100).toFixed(1) : 0}%;${d.total === dowMax && dowMax ? 'background:var(--mango)' : ''}"></div></div></div>`).join('') : '<p class="rep-empty">Sin ventas en el periodo.</p>'}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Detalle de ventas</h2><button class="btn btn-sm" data-act="repCSV"${A.tickets ? '' : ' disabled'}>Descargar Excel (CSV)</button></div>
+      ${ventasLista.length ? ventasLista.map(v => `<button class="ticket-item" data-act="repTicket" data-folio="${esc(v[0])}">
+          <span><strong>${esc((X.cli[v[4]] || {}).nombre || v[4])}</strong><span class="sub">${esc(v[0])}, ${fCorta(v[1])} ${new Date(v[2]).toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'})}, ${esc(X.rutaN(v[3]))}</span></span>
+          <b>${money(v[6])}</b></button>`).join('') : '<p class="rep-empty">Sin ventas en el periodo.</p>'}
+      ${X.cur.length > ventasLista.length ? `<p class="hint">Se muestran las ${ventasLista.length} más recientes de ${X.cur.length}.</p><button class="btn btn-block" style="margin-top:.5rem" data-act="repMas">Ver más ventas</button>` : ''}
+    </div>`;
+  R.X = X;
+}
+function repTicket(folio){
+  const X = R.X; if (!X) return;
+  const v = X.cur.find(x => x[0] === folio); if (!v) return;
+  const c = X.cli[v[4]] || {};
+  openTicket({folio: v[0], ts: v[2], ruta: v[3], clienteId: v[4], clienteNombre: c.nombre || v[4], clienteTel: c.telefono || '',
+    items: (X.det[v[0]] || []).map(x => ({c: x[1], n: x[2], g: x[3], p: x[4], q: x[5]})), total: v[6]});
+}
+function repCSV(){
+  const X = R.X; if (!X) return;
+  const q = s => '"' + String(s ?? '').replace(/"/g, '""') + '"';
+  const L = ['folio,fecha,hora,ruta,repartidor,cliente,codigo,producto,gramaje_g,precio,cantidad,importe'];
+  X.cur.slice().sort((a, b) => a[2] < b[2] ? -1 : 1).forEach(v => (X.det[v[0]] || []).forEach(x => L.push([
+    q(v[0]), v[1], new Date(v[2]).toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'}), q(X.rutaN(v[3])), q(X.userN(v[5])),
+    q((X.cli[v[4]] || {}).nombre || v[4]), q(x[1]), q(x[2]), x[3], x[4].toFixed(2), x[5], x[6].toFixed(2)].join(','))));
+  const blob = new Blob(['\uFEFF' + L.join('\n')], {type: 'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `ventas_${R.desde}_a_${R.hasta}.csv`; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
 /* ---------- render ---------- */
 function renderDia(){ renderCart(); renderTickets(); renderCarga(); $('#vNoCarga').hidden = !!S.carga || !S.ruta; }
 function renderProductos(){ renderTiles(); renderCatalogo(); renderDia(); renderSug(); }
 function renderAll(){
   const r = $('#routeChip'); r.textContent = S.ruta ? rutaNombre(S.ruta) : 'Elegir ruta';
-  renderClientes(); renderClienteSelect(); renderRutaSelect(); renderSug(); renderProductos();
+  r.hidden = !!(S.user && S.user.rol === 'ADMIN');
+  renderClientes(); renderClienteSelect(); renderSug(); renderProductos();
 }
 
 /* ---------- eventos ---------- */
@@ -912,6 +1571,33 @@ const acts = {
     fillCliente(c); window.scrollTo(0, 0); $('#cNombre').focus();
   },
   cancelCliente: () => fillCliente(null),
+  mapFit: () => ajustarMapa(),
+  mapYo: () => miUbicacion(),
+  rtSave, rtCancel: () => rtFill(null),
+  rtEdit: b => { const r = RT.admin.find(x => x.id === b.dataset.r); if (r) { rtFill(r); window.scrollTo(0, 0); $('#rtNombre').focus(); } },
+  rtDel: b => rtDel(b.dataset.r),
+  rtVerMapa: b => {
+    const id = b.dataset.r;
+    M.hidden = new Set([...S.rutas.map(r => r.id), SIN_RUTA].filter(x => x !== id));
+    M.fitted = false; show('mapa');
+  },
+  repPreset: b => { R.preset = b.dataset.p; cargarReporte(false); },
+  repRecargar: () => cargarReporte(true),
+  repProdBy: b => { R.prodBy = b.dataset.v; renderReporte(); },
+  repCliBy: b => { R.cliBy = b.dataset.v; renderReporte(); },
+  repInact: b => { R.inact = Number(b.dataset.v); renderReporte(); },
+  repTicket: b => repTicket(b.dataset.folio),
+  repCSV: () => repCSV(),
+  repMas: () => { R.verN += 20; renderReporte(); },
+  mapToggleRuta: b => { const k = b.dataset.r; if (M.hidden.has(k)) M.hidden.delete(k); else M.hidden.add(k); renderMapa(); },
+  mapSelVisibles: () => {
+    if (!M.map || !esAdminMapa()) return;
+    const bounds = M.map.getBounds(); let n = 0;
+    Object.entries(M.markers).forEach(([id, m]) => { if (bounds.contains(m.getLatLng()) && !M.sel.has(id)) { M.sel.add(id); n++; } });
+    renderMapa(); toast(n ? `${n} agregados a la selección` : 'No hay más clientes visibles en la pantalla.', n ? 'ok' : 'warn');
+  },
+  mapSelClear: () => { M.sel.clear(); renderMapa(); },
+  mapAsignar: () => { if (esAdminMapa()) asignarClientes([...M.sel], $('#mRutaDest').value); },
   delCliente: async b => {
     const c = S.clientes.find(x => x.id === b.dataset.id); if (!c) return;
     if (!(await confirmDlg(`¿Dar de baja a ${c.nombre}? Sus ventas anteriores se conservan.`, 'Dar de baja'))) return;
@@ -947,7 +1633,20 @@ document.addEventListener('click', e => {
   const f = acts[b.dataset.act]; if (f) { e.preventDefault(); f(b, e); }
 });
 $('#cBuscar').addEventListener('input', renderClientes);
+$('#rRuta').addEventListener('change', e => { R.ruta = e.target.value; R.verN = 10; renderReporte(); });
+$('#rUsuario').addEventListener('change', e => { R.usuario = e.target.value; R.verN = 10; renderReporte(); });
+['#rDesde', '#rHasta'].forEach(id => $(id).addEventListener('change', () => {
+  const d = $('#rDesde').value, h = $('#rHasta').value; if (!d || !h) return;
+  R.preset = 'custom'; R.desde = d; R.hasta = h; cargarReporte(false);
+}));
+$('#rBody').addEventListener('click', e => {
+  const r = e.target.closest('[data-bar]'); if (!r) return;
+  const b = R.serie[Number(r.dataset.bar)]; if (!b) return;
+  $('#rCap').textContent = `${b.label}: ${money(b.total)} en ${b.tickets} ${b.tickets === 1 ? 'ticket' : 'tickets'}`;
+});
 $('#cTodos').addEventListener('change', renderClientes);
+$('#cFiltro').addEventListener('change', renderClientes);
+$('#kRuta').addEventListener('change', e => { if (e.target.value) setRuta(e.target.value); });
 $('#pBuscar').addEventListener('input', renderCatalogo);
 $('#vCliente').addEventListener('change', e => { S.clienteSel = e.target.value; calcSugerido(); });
 $('#vCodigo').addEventListener('keydown', e => { if (e.key === 'Enter') acts.addCodigo(); });
