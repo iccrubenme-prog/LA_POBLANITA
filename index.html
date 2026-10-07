@@ -145,7 +145,7 @@ table.data tfoot td{font-weight:700;border-bottom:0;border-top:2px solid var(--i
 .nav button{flex:1;border:0;background:none;padding:.55rem .25rem .6rem;display:flex;flex-direction:column;align-items:center;gap:.15rem;
   font-size:.78rem;font-weight:700;color:var(--muted);cursor:pointer;position:relative}
 .nav button svg{width:24px;height:24px}
-.nav button{font-size:.72rem;padding-left:.1rem;padding-right:.1rem}
+.nav button{font-size:.66rem;padding-left:0;padding-right:0}
 .nav button.on{color:var(--cobalt)}
 .nav button.on::before{content:"";position:absolute;top:0;left:25%;right:25%;height:3px;border-radius:0 0 3px 3px;background:var(--mango)}
 
@@ -220,6 +220,16 @@ body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
 .check-item .sub{display:inline}
 .rt-dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:.4rem;vertical-align:middle;box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--line)}
 .list-head select{width:auto;min-height:40px;padding:.3rem .6rem;font-size:15px}
+.mov{display:flex;justify-content:space-between;gap:.75rem;padding:.55rem 0;border-top:1px solid var(--line)}
+.mov:first-child{border-top:0}
+.mov b{font-family:"Fredoka",system-ui,sans-serif;font-weight:600;font-size:1.1rem;white-space:nowrap}
+.pill.t-ENTRADA{background:rgba(62,142,47,.14);color:#2D6B22}
+.pill.t-AJUSTE{background:var(--warn-bg);color:var(--warn-ink)}
+.pill.t-CARGA_RUTA{background:var(--cobalt-soft);color:var(--cobalt)}
+.pill.t-DEVOLUCION_RUTA{background:rgba(15,163,177,.15);color:#0B7C87}
+.inv-row{display:grid;grid-template-columns:1fr 6.5rem;gap:.75rem;align-items:center;padding:.5rem 0;border-top:1px solid var(--line)}
+.inv-row:first-child{border-top:0}
+.inv-row input{text-align:center;font-weight:700}
 .credit{display:flex;align-items:center;justify-content:center;gap:.4rem;font-size:.78rem;color:var(--muted);letter-spacing:.02em}
 .credit img{width:16px;height:16px}
 .credit b{font-weight:700}
@@ -296,6 +306,7 @@ body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
       <select id="vCliente"></select>
       <div id="vSug"></div>
     </div>
+    <div id="vCerrado" class="banner" hidden>El día de esta ruta ya se cerró. No se pueden registrar más ventas hoy.</div>
     <div id="vNoCarga" class="banner" hidden>No hay carga registrada hoy para esta ruta, así que no se controlan existencias. Regístrala en Carga.</div>
     <div class="scan-hero">
       <button class="btn btn-primary btn-scan" data-act="scanVenta">
@@ -322,6 +333,7 @@ body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M10 8v8M13 8v8M16 8v8"/></svg>
         Escanear piezas (suma 1 por lectura)</button>
       <div id="kTabla" style="margin-top:.75rem"></div>
+      <p class="hint warn" id="kCerrado" hidden>El día de esta ruta ya se cerró: lo que quedó regresó al almacén y la carga ya no se puede modificar.</p>
       <p class="hint warn" id="kSoloLectura" hidden>La carga la registra el administrador. Aquí puedes consultarla.</p>
       <button class="btn btn-primary btn-block" data-act="saveCarga" id="kSave">Guardar carga</button>
     </div>
@@ -345,6 +357,25 @@ body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
     <div class="list-head"><h2>Productos</h2><span class="hint" id="pCount"></span></div>
     <input id="pBuscar" type="search" placeholder="Buscar por nombre o código" aria-label="Buscar producto">
     <div id="pLista"></div>
+  </section>
+  <section id="v-inventario" class="view">
+    <div class="kpis" id="iKpis"></div>
+    <div class="card">
+      <div class="card-head"><h2>Registrar movimiento</h2>
+        <div class="mini-seg" id="iModoSeg"><button class="on" data-act="invModo" data-v="ENTRADA">Entrada</button><button data-act="invModo" data-v="AJUSTE">Conteo físico</button></div></div>
+      <p class="hint" id="iModoHint" style="margin-top:0"></p>
+      <div id="iForm"></div>
+      <label for="iNota">Nota (opcional)</label>
+      <input id="iNota" maxlength="120" placeholder="Ej. Compra a proveedor, factura 123">
+      <button class="btn btn-primary btn-block" data-act="invGuardar" id="iGuardar">Registrar entrada</button>
+    </div>
+    <div class="card"><h2>Cierres de día pendientes</h2><div id="iPend"></div></div>
+    <div class="card"><h2>Existencias por producto</h2><div id="iExist"></div></div>
+    <div class="card">
+      <div class="card-head"><h2>Movimientos</h2><span class="hint" style="margin:0">trazabilidad</span></div>
+      <div class="two"><select id="iFProd" aria-label="Filtrar por producto"></select><select id="iFTipo" aria-label="Filtrar por tipo"></select></div>
+      <div id="iMovs" style="margin-top:.5rem"></div>
+    </div>
   </section>
   <section id="v-rutas" class="view">
     <div class="card">
@@ -383,6 +414,10 @@ body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
   <section id="v-reportes" class="view">
     <div class="card">
       <div class="map-head"><h2 style="margin:0">Reportes</h2><button class="btn btn-sm" data-act="repRecargar">Actualizar</button></div>
+      <div class="seg" id="rModo" role="group" aria-label="Tipo de reporte" style="margin-top:.5rem">
+        <button class="on" data-act="repModo" data-v="ventas">Ventas</button>
+        <button data-act="repModo" data-v="inv">Análisis de inventario</button>
+      </div>
       <div class="seg" id="rPresets" role="group" aria-label="Periodo">
         <button data-act="repPreset" data-p="hoy">Hoy</button>
         <button data-act="repPreset" data-p="ayer">Ayer</button>
@@ -398,7 +433,7 @@ body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
       </div>
       <div class="two">
         <div><label for="rRuta">Ruta</label><select id="rRuta"></select></div>
-        <div><label for="rUsuario">Repartidor</label><select id="rUsuario"></select></div>
+        <div id="rUsuarioWrap"><label for="rUsuario">Repartidor</label><select id="rUsuario"></select></div>
       </div>
     </div>
     <div id="rBody"></div>
@@ -413,6 +448,7 @@ body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
   <button data-view="rutas" id="navRutas" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h8.5a3.5 3.5 0 0 0 0-7h-9a3.5 3.5 0 0 1 0-7H16"/></svg>Rutas</button>
   <button data-view="mapa" id="navMapa" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>Mapa</button>
   <button data-view="reportes" id="navReportes" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 16v-5M12 16V6M17 16v-8"/></svg>Reportes</button>
+  <button data-view="inventario" id="navInventario" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 12 4l9 5v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M7 20v-7h10v7M7 16h10"/></svg>Inventario</button>
   <button data-view="catalogo" id="navCatalogo" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.5"/></svg>Catálogo</button>
 </div></nav>
 
@@ -567,6 +603,7 @@ function aplicarDia(d){
   S.fecha = d.fecha;
   S.carga = d.carga ? {items: d.carga} : null;
   S.ventas = {tickets: d.tickets || []};
+  S.cerrado = !!d.cerrado;
   if (!S.cargaDirty) S.cargaDraft = Object.assign({}, d.carga || {});
 }
 function vendidoHoy(){
@@ -606,7 +643,8 @@ function logout(msg){
   setProductos([]); setClientes([]); aplicarDia(null);
   ['#cBuscar', '#vCodigo', '#pBuscar', '#lPin'].forEach(id => { $(id).value = ''; });
   fillProd(null); fillCliente(null); renderAll(); show('clientes');
-  ['#navCatalogo', '#navMapa', '#navReportes', '#navRutas'].forEach(id => { $(id).hidden = true; });
+  ['#navCatalogo', '#navMapa', '#navReportes', '#navRutas', '#navInventario'].forEach(id => { $(id).hidden = true; });
+  I.data = null;
   $('#navVender').hidden = false; $('#statusTxt').textContent = '';
   RT.cargado = false; RT.admin = []; RT.repartidores = []; RT.sinRuta = 0; rtFill(null);
   R.data = null; R.rango = null; R.ruta = ''; R.usuario = ''; $('#rBody').innerHTML = '';
@@ -621,7 +659,7 @@ async function cargarTodo(){
   setProductos(r.productos); setClientes(r.clientes); aplicarDia(r.dia);
   if (!r.dia) S.fecha = r.fecha;
   const admin = S.user.rol === 'ADMIN';
-  ['#navCatalogo', '#navReportes', '#navRutas'].forEach(id => { $(id).hidden = !admin; });
+  ['#navCatalogo', '#navReportes', '#navRutas', '#navInventario'].forEach(id => { $(id).hidden = !admin; });
   $('#navMapa').hidden = false;
   $('#navVender').hidden = admin;
   M.fitted = false; M.hidden.clear(); M.sel.clear();
@@ -640,7 +678,7 @@ async function refrescarDia(){
 /* ---------- navegación y ruta ---------- */
 function show(view){
   const esAdmin = S.user && S.user.rol === 'ADMIN';
-  if (['catalogo', 'reportes', 'rutas'].includes(view) && !esAdmin) view = 'clientes';
+  if (['catalogo', 'reportes', 'rutas', 'inventario'].includes(view) && !esAdmin) view = 'clientes';
   if (view === 'vender' && esAdmin) view = 'clientes';
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + view));
   document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('on', b.dataset.view === view));
@@ -648,6 +686,8 @@ function show(view){
   if (view === 'mapa') abrirMapa();
   if (view === 'reportes') abrirReportes();
   if (view === 'rutas') abrirRutas();
+  if (view === 'inventario') cargarInventario();
+  if (view === 'carga' && esAdmin && !I.data) cargarInventario(true);
 }
 function openRuta(){
   if (S.user && S.user.rol === 'ADMIN') return;
@@ -909,7 +949,9 @@ async function copyTicket(){
 function renderCarga(){
   const adm = S.user && S.user.rol === 'ADMIN';
   $('#kRutaWrap').hidden = !adm;
-  $('#kScan').hidden = !adm; $('#kSave').hidden = !adm; $('#kSoloLectura').hidden = adm || !S.user;
+  const edit = adm && !S.cerrado;
+  $('#kScan').hidden = !edit; $('#kSave').hidden = !edit; $('#kSoloLectura').hidden = adm || !S.user || S.cerrado;
+  $('#kCerrado').hidden = !S.cerrado;
   if (adm) $('#kRuta').innerHTML = S.rutas.length
     ? S.rutas.map(r => `<option value="${esc(r.id)}"${r.id === S.ruta ? ' selected' : ''}>${esc(r.nombre)}</option>`).join('')
     : '<option value="">Crea una ruta primero</option>';
@@ -921,8 +963,8 @@ function renderCarga(){
   } else {
     const f = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.kcode;
     $('#kTabla').innerHTML = S.productos.map(p => `<div class="k-row">
-      <div><strong>${esc(p.nombre)}</strong><span class="sub">${p.gramaje} g, código ${esc(p.codigo)}</span></div>
-      <input type="number" min="0" inputmode="numeric" data-kcode="${esc(p.codigo)}"${adm ? '' : ' disabled'} value="${S.cargaDraft[p.codigo] || ''}" placeholder="0" aria-label="Piezas cargadas de ${esc(p.nombre)}"></div>`).join('');
+      <div><strong>${esc(p.nombre)}</strong><span class="sub">${p.gramaje} g, código ${esc(p.codigo)}${adm && I.data ? `, <b>${nfmt(I.data.almacen[p.codigo] || 0)} en almacén</b>` : ''}</span></div>
+      <input type="number" min="0" inputmode="numeric" data-kcode="${esc(p.codigo)}"${edit ? '' : ' disabled'} value="${S.cargaDraft[p.codigo] || ''}" placeholder="0" aria-label="Piezas cargadas de ${esc(p.nombre)}"></div>`).join('');
     if (f) { const el = document.querySelector(`[data-kcode="${CSS.escape(f)}"]`); if (el) el.focus(); }
   }
   renderExist();
@@ -957,7 +999,8 @@ async function saveCarga(b){
   b.disabled = true;
   try {
     const d = await call('guardarCarga', S.ruta, items);
-    S.cargaDirty = false; aplicarDia(d); renderDia(); toast('Carga guardada', 'ok');
+    S.cargaDirty = false; aplicarDia(d); renderDia(); toast('Carga guardada y descontada del almacén', 'ok');
+    cargarInventario(true);
   } catch(e){ fail(e); }
   b.disabled = false;
 }
@@ -1260,6 +1303,204 @@ async function rtDel(id){
   } catch(e){ fail(e); }
 }
 
+/* ---------- inventario ---------- */
+const I = {data: null, modo: 'ENTRADA', draft: {}, verN: 30};
+const TIPOS = {ENTRADA: 'Entrada', AJUSTE: 'Ajuste por conteo', CARGA_RUTA: 'Carga a ruta', DEVOLUCION_RUTA: 'Devolución de ruta'};
+async function cargarInventario(silencioso){
+  if (!S.user || S.user.rol !== 'ADMIN') return;
+  if (!silencioso && !I.data) $('#iExist').innerHTML = '<p class="rep-empty">Cargando inventario…</p>';
+  try { I.data = await call('inventario'); renderInventario(); renderCarga(); }
+  catch(e){ if (!silencioso) fail(e); }
+}
+const invProds = () => (I.data ? I.data.productos : []).filter(p => p.activo || (I.data.almacen[p.codigo] || 0) || (I.data.enRuta[p.codigo] || 0))
+  .sort((a, b) => norm(a.nombre).localeCompare(norm(b.nombre)));
+const nomRuta = id => rutaNombre(id) || id;
+function renderInventario(){
+  const D = I.data; if (!D) return;
+  const prods = invProds();
+  let alm = 0, ruta = 0, valor = 0;
+  prods.forEach(p => { const a = D.almacen[p.codigo] || 0, r = D.enRuta[p.codigo] || 0; alm += a; ruta += r; valor += (a + r) * p.precio; });
+  $('#iKpis').innerHTML = `<div class="kpi"><span>En almacén</span><b>${nfmt(alm)}</b><em class="flat">piezas</em></div>
+    <div class="kpi"><span>En rutas</span><b>${nfmt(ruta)}</b><em class="flat">piezas sin cerrar</em></div>
+    <div class="kpi"><span>Valor del inventario</span><b>${money(valor)}</b><em class="flat">a precio de venta</em></div>
+    <div class="kpi"><span>Cierres pendientes</span><b>${D.pendientes.length}</b><em class="${D.pendientes.some(x => x.fecha < D.hoy) ? 'down' : 'flat'}">${D.pendientes.some(x => x.fecha < D.hoy) ? 'hay días atrasados' : 'al día'}</em></div>`;
+  // formulario
+  const ent = I.modo === 'ENTRADA';
+  $('#iModoSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === I.modo));
+  $('#iModoHint').textContent = ent ? 'Escribe cuántas piezas entran al almacén (compra o producción).'
+    : 'Escribe cuántas piezas contaste físicamente en el almacén. Se ajusta solo la diferencia.';
+  $('#iGuardar').textContent = ent ? 'Registrar entrada' : 'Ajustar a lo contado';
+  $('#iForm').innerHTML = prods.filter(p => p.activo).length ? prods.filter(p => p.activo).map(p => `<div class="inv-row">
+      <div><strong>${esc(p.nombre)}</strong><span class="sub">${p.gramaje} g, en almacén: ${nfmt(D.almacen[p.codigo] || 0)}</span></div>
+      <input type="number" min="0" inputmode="numeric" data-icode="${esc(p.codigo)}" value="${I.draft[p.codigo] ?? ''}" placeholder="${ent ? '0' : nfmt(D.almacen[p.codigo] || 0)}" aria-label="${esc(p.nombre)}"></div>`).join('')
+    : '<p class="empty">Primero da de alta productos en Catálogo.</p>';
+  // cierres pendientes
+  $('#iPend').innerHTML = D.pendientes.length ? D.pendientes.map(x => `<div class="hbar"><div class="hbar-top">
+      <span><strong>${esc(nomRuta(x.ruta))}</strong> <span class="pill ${x.fecha < D.hoy ? 'warn' : ''}">${x.fecha === D.hoy ? 'Hoy' : fLarga(x.fecha)}</span></span>
+      <button class="btn btn-sm btn-primary" data-act="invCerrar" data-r="${esc(x.ruta)}" data-f="${esc(x.fecha)}">Cerrar día</button></div>
+      <div class="sub">Cargó ${nfmt(x.cargado)}, vendió ${nfmt(x.vendido)}, quedan <b>${nfmt(x.queda)}</b> piezas por regresar al almacén.</div></div>`).join('')
+    : '<p class="hint" style="margin:0">No hay días abiertos. Cuando cargues una ruta aparecerá aquí para cerrarla al final del día.</p>';
+  // existencias
+  $('#iExist').innerHTML = prods.length ? `<div class="table-wrap"><table class="data"><thead><tr><th>Producto</th><th class="n">Almacén</th><th class="n">En ruta</th><th class="n">Total</th></tr></thead><tbody>
+    ${prods.map(p => { const a = D.almacen[p.codigo] || 0, r = D.enRuta[p.codigo] || 0;
+      return `<tr><td>${esc(p.nombre)} <span class="sub" style="display:inline">${p.gramaje} g</span></td><td class="n ${a <= 0 ? 'low' : ''}">${nfmt(a)}</td><td class="n">${nfmt(r)}</td><td class="n"><b>${nfmt(a + r)}</b></td></tr>`; }).join('')}
+    </tbody><tfoot><tr><td>Total</td><td class="n">${nfmt(alm)}</td><td class="n">${nfmt(ruta)}</td><td class="n">${nfmt(alm + ruta)}</td></tr></tfoot></table></div>`
+    : '<p class="empty">Sin productos.</p>';
+  // filtros de movimientos
+  const fp = $('#iFProd').value, ft = $('#iFTipo').value;
+  $('#iFProd').innerHTML = '<option value="">Todos los productos</option>' + D.productos.map(p => `<option value="${esc(p.codigo)}"${p.codigo === fp ? ' selected' : ''}>${esc(p.nombre)}</option>`).join('');
+  $('#iFTipo').innerHTML = '<option value="">Todos los movimientos</option>' + Object.entries(TIPOS).map(([k, v]) => `<option value="${k}"${k === ft ? ' selected' : ''}>${v}</option>`).join('');
+  renderMovs();
+}
+function movHTML(m, prodN){
+  const q = m[5];
+  return `<div class="mov"><div><strong>${esc(prodN(m[4]))}</strong>
+    <span class="sub"><span class="pill t-${m[3]}">${TIPOS[m[3]] || m[3]}</span> ${fCorta(m[2])} ${new Date(m[1]).toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'})}${m[6] ? ', ' + esc(nomRuta(m[6])) : ''}, ${esc(m[8])}</span>
+    ${m[9] ? `<span class="sub">${esc(m[9])}</span>` : ''}</div>
+    <b class="${q > 0 ? 'up' : 'down'}">${q > 0 ? '+' : ''}${nfmt(q)}</b></div>`;
+}
+function renderMovs(){
+  const D = I.data; if (!D) return;
+  const fp = $('#iFProd').value, ft = $('#iFTipo').value;
+  const pn = {}; D.productos.forEach(p => { pn[p.codigo] = p.nombre; });
+  const l = D.movs.filter(m => (!fp || m[4] === fp) && (!ft || m[3] === ft));
+  $('#iMovs').innerHTML = l.length ? l.slice(0, I.verN).map(m => movHTML(m, c => pn[c] || c)).join('')
+      + (l.length > I.verN ? `<button class="btn btn-block" style="margin-top:.5rem" data-act="invMas">Ver más movimientos</button>` : '')
+    : '<p class="hint">Sin movimientos con este filtro.</p>';
+}
+async function invGuardar(b){
+  const D = I.data; if (!D) return;
+  const items = {}; let n = 0, resumen = [];
+  Object.entries(I.draft).forEach(([c, v]) => {
+    if (v === '' || v == null) return;
+    const q = Math.max(0, Math.floor(Number(v) || 0));
+    const delta = I.modo === 'ENTRADA' ? q : q - (D.almacen[c] || 0);
+    if (!delta) return;
+    items[c] = delta; n++;
+    const p = D.productos.find(x => x.codigo === c);
+    resumen.push(`${p ? p.nombre : c}: ${delta > 0 ? '+' : ''}${delta}`);
+  });
+  if (!n) { toast(I.modo === 'ENTRADA' ? 'Escribe cuántas piezas entran.' : 'No hay diferencias contra el almacén.', 'warn'); return; }
+  if (I.modo === 'AJUSTE' && !(await confirmDlg('Se ajustará el almacén así: ' + resumen.join(', ') + '. ¿Continuar?', 'Ajustar'))) return;
+  b.disabled = true;
+  try {
+    I.data = await call('registrarInventario', I.modo, items, $('#iNota').value.trim());
+    I.draft = {}; $('#iNota').value = ''; I.verN = 30;
+    renderInventario(); renderCarga();
+    toast(I.modo === 'ENTRADA' ? 'Entrada registrada' : 'Inventario ajustado', 'ok');
+  } catch(e){ fail(e); }
+  b.disabled = false;
+}
+async function invCerrar(ruta, fecha){
+  const x = I.data && I.data.pendientes.find(p => p.ruta === ruta && p.fecha === fecha); if (!x) return;
+  if (!(await confirmDlg(`¿Cerrar el día de ${nomRuta(ruta)} (${fLarga(fecha)})? Regresarán ${nfmt(x.queda)} piezas al almacén y ya no se podrá vender ni cambiar la carga de ese día.`, 'Cerrar día'))) return;
+  try {
+    I.data = await call('cerrarDia', ruta, fecha);
+    renderInventario();
+    toast(`Día cerrado: ${nfmt(I.data.devueltas)} piezas regresaron al almacén`, 'ok');
+    if (ruta === S.ruta && fecha === S.fecha) refrescarDia().catch(() => {});
+    R.inv = null;
+  } catch(e){ fail(e); }
+}
+
+/* ---------- análisis de inventario (Reportes) ---------- */
+async function cargarInvReporte(forzar){
+  $('#rUsuarioWrap').hidden = true;
+  if (R.inv && R.inv.desde === R.desde && R.inv.hasta === R.hasta && !forzar && Date.now() - R.invAt < 120000) { renderInvReporte(); return; }
+  $('#rBody').innerHTML = `<div class="card rep-empty">Cargando análisis de inventario…</div>`;
+  try { R.inv = await call('reporteInventario', R.desde, R.hasta); R.invAt = Date.now(); renderInvReporte(); }
+  catch(e){ $('#rBody').innerHTML = `<div class="card rep-empty">No se pudo cargar el análisis.</div>`; fail(e); }
+}
+function renderInvReporte(){
+  const D = R.inv; if (!D) return;
+  const rv = R.ruta;
+  $('#rRuta').innerHTML = `<option value="">Todas las rutas</option>` + D.rutas.map(r => `<option value="${esc(r.id)}"${r.id === rv ? ' selected' : ''}>${esc(r.nombre)}</option>`).join('');
+  const rn = id => (D.rutas.find(r => r.id === id) || {}).nombre || id || 'Almacén';
+  const pn = {}; D.productos.forEach(p => { pn[p.codigo] = p; });
+  const movs = D.movs.filter(m => !rv || m[6] === rv || !m[6]);
+  const sum = t => movs.filter(m => m[3] === t).reduce((a, m) => a + m[5], 0);
+  const entradas = sum('ENTRADA'), ajustes = sum('AJUSTE'), cargas = -sum('CARGA_RUTA'), devol = sum('DEVOLUCION_RUTA');
+  const dias = diffD(D.desde, D.hasta) + 1;
+  let alm = 0, enR = 0, valor = 0;
+  const prods = D.productos.filter(p => p.activo || D.almacen[p.codigo] || D.enRuta[p.codigo]).map(p => {
+    const a = D.almacen[p.codigo] || 0, r = D.enRuta[p.codigo] || 0, ven = D.vendido[p.codigo] || 0, prom = ven / dias;
+    alm += a; enR += r; valor += (a + r) * p.precio;
+    return {p, a, r, tot: a + r, ven, prom, cob: prom ? (a + r) / prom : null};
+  }).sort((x, y) => (x.cob === null ? 1e9 : x.cob) - (y.cob === null ? 1e9 : y.cob));
+  const bajos = prods.filter(x => x.cob !== null && x.cob < 7);
+  const pctDev = cargas ? Math.round(devol / cargas * 100) : null;
+  // por ruta
+  const rutas = {};
+  movs.forEach(m => { if (!m[6]) return; const r = rutas[m[6]] = rutas[m[6]] || {id: m[6], cargado: 0, devuelto: 0};
+    if (m[3] === 'CARGA_RUTA') r.cargado -= m[5]; if (m[3] === 'DEVOLUCION_RUTA') r.devuelto += m[5]; });
+  Object.keys(D.vendidoRuta).forEach(id => { if (!rv || id === rv) rutas[id] = rutas[id] || {id, cargado: 0, devuelto: 0}; });
+  const lr = Object.values(rutas).map(r => ({...r, vendido: D.vendidoRuta[r.id] || 0})).sort((a, b) => b.cargado - a.cargado);
+  const rangoTxt = D.desde === D.hasta ? fLarga(D.desde) : `${fCorta(D.desde)} al ${fCorta(D.hasta)}`;
+  const tipos = [['Entradas', entradas, 'var(--lime)'], ['Cargas a rutas', cargas, 'var(--cobalt-btn)'], ['Devoluciones de ruta', devol, '#0FA3B1'], ['Ajustes por conteo', ajustes, 'var(--mango)']];
+  const maxT = Math.max(...tipos.map(t => Math.abs(t[1])), 1);
+
+  $('#rBody').innerHTML = `
+    <div class="card rep-sum">Hoy tienes <b>${nfmt(alm + enR)} piezas</b> con valor de <b>${money(valor)}</b>: ${nfmt(alm)} en almacén y ${nfmt(enR)} en rutas sin cerrar.
+      Del <b>${rangoTxt}</b> entraron ${nfmt(entradas)}, se cargaron ${nfmt(cargas)} a rutas${rv ? ' (' + esc(rn(rv)) + ')' : ''} y regresaron ${nfmt(devol)}${pctDev !== null ? ` (<b>${pctDev}%</b> de lo cargado)` : ''}.
+      ${ajustes < 0 ? `Los conteos físicos detectaron un faltante de <b class="down">${nfmt(-ajustes)} piezas</b>.` : ajustes > 0 ? `Los conteos físicos encontraron ${nfmt(ajustes)} piezas de más.` : ''}
+      ${bajos.length ? ` <b>${bajos.length}</b> ${bajos.length === 1 ? 'producto alcanza' : 'productos alcanzan'} para menos de 7 días al ritmo de venta actual.` : ''}
+      <div class="rep-range">Las existencias son al momento; los movimientos y ventas son del periodo elegido.</div></div>
+
+    <div class="kpis">
+      <div class="kpi"><span>Valor del inventario</span><b>${money(valor)}</b><em class="flat">a precio de venta</em></div>
+      <div class="kpi"><span>Piezas en almacén</span><b>${nfmt(alm)}</b><em class="flat">${nfmt(enR)} más en rutas</em></div>
+      <div class="kpi"><span>Entradas</span><b>${nfmt(entradas)}</b><em class="flat">en el periodo</em></div>
+      <div class="kpi"><span>Cargado a rutas</span><b>${nfmt(cargas)}</b><em class="flat">en el periodo</em></div>
+      <div class="kpi"><span>Devuelto por rutas</span><b>${nfmt(devol)}</b><em class="${pctDev !== null && pctDev > 40 ? 'down' : 'flat'}">${pctDev !== null ? pctDev + '% de lo cargado' : 'sin cargas'}</em></div>
+      <div class="kpi"><span>Ajustes por conteo</span><b class="${ajustes < 0 ? 'down' : ''}">${ajustes > 0 ? '+' : ''}${nfmt(ajustes)}</b><em class="flat">${ajustes < 0 ? 'faltante (merma)' : ajustes > 0 ? 'sobrante' : 'sin diferencias'}</em></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Cobertura por producto</h2><span class="hint" style="margin:0">días que alcanza la existencia</span></div>
+      ${prods.length ? prods.map(x => `<div class="hbar"><div class="hbar-top"><span><strong>${esc(x.p.nombre)}</strong> <span class="sub" style="display:inline">${x.p.gramaje} g</span></span>
+          <b>${x.cob === null ? '<span class="pill">Sin ventas</span>' : `<span class="pill ${x.cob < 7 ? 'warn' : x.cob > 45 ? '' : 'ok'}">${x.cob < 1 ? 'menos de 1 día' : Math.round(x.cob) + ' días'}</span>`}</b></div>
+          <div class="sub">Existencia ${nfmt(x.tot)} (${nfmt(x.a)} almacén, ${nfmt(x.r)} ruta). Vendió ${nfmt(x.ven)} en ${dias} ${dias === 1 ? 'día' : 'días'}, ${x.prom.toFixed(1)} por día.</div></div>`).join('')
+        : '<p class="rep-empty">Sin productos.</p>'}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Rutas</h2><span class="hint" style="margin:0">cargado, vendido y devuelto</span></div>
+      ${lr.length ? lr.map(r => { const ap = r.cargado ? Math.min(100, Math.round(r.vendido / r.cargado * 100)) : null;
+          return `<div class="hbar"><div class="hbar-top"><span><strong>${esc(rn(r.id))}</strong></span><b>${nfmt(r.cargado)} cargadas</b></div>
+            <div class="track"><div class="fill" style="width:${r.cargado ? Math.min(100, r.vendido / r.cargado * 100).toFixed(1) : 0}%;background:${colorRuta(r.id)}"></div></div>
+            <div class="sub">Vendió ${nfmt(r.vendido)}, devolvió ${nfmt(r.devuelto)}.
+              ${ap !== null ? `<span class="pill ${ap >= 85 ? 'ok' : ap < 60 ? 'warn' : ''}">Aprovechó ${ap}% de la carga</span>` : ''}</div></div>`; }).join('')
+        : '<p class="rep-empty">Sin cargas en el periodo.</p>'}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Movimientos del periodo</h2></div>
+      ${tipos.map(t => `<div class="hbar"><div class="hbar-top"><span>${t[0]}</span><b>${t[1] > 0 && t[0].startsWith('Ajustes') ? '+' : ''}${nfmt(t[1])} pzs</b></div>
+        <div class="track"><div class="fill" style="width:${(Math.abs(t[1]) / maxT * 100).toFixed(1)}%;background:${t[2]}"></div></div></div>`).join('')}
+      <button class="btn btn-block" data-act="invCSV"${movs.length ? '' : ' disabled'}>Descargar trazabilidad (CSV)</button>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Trazabilidad</h2><span class="hint" style="margin:0">${movs.length} movimientos</span></div>
+      ${movs.length ? movs.slice().reverse().slice(0, R.invN || 20).map(m => movHTML(m, c => (pn[c] || {}).nombre || c)).join('')
+        + (movs.length > (R.invN || 20) ? '<button class="btn btn-block" style="margin-top:.5rem" data-act="invRepMas">Ver más</button>' : '')
+        : '<p class="rep-empty">Sin movimientos en el periodo.</p>'}
+    </div>`;
+}
+function invCSV(){
+  const D = R.inv; if (!D) return;
+  const q = s => '"' + String(s ?? '').replace(/"/g, '""') + '"';
+  const pn = {}; D.productos.forEach(p => { pn[p.codigo] = p.nombre; });
+  const rn = id => (D.rutas.find(r => r.id === id) || {}).nombre || id;
+  const L = ['id_movimiento,fecha,hora,tipo,codigo,producto,piezas,ruta,referencia,usuario,nota'];
+  D.movs.filter(m => !R.ruta || m[6] === R.ruta || !m[6]).forEach(m => L.push([q(m[0]), m[2], new Date(m[1]).toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'}),
+    q(TIPOS[m[3]] || m[3]), q(m[4]), q(pn[m[4]] || m[4]), m[5], q(m[6] ? rn(m[6]) : ''), q(m[7]), q(m[8]), q(m[9])].join(',')));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF' + L.join('\n')], {type: 'text/csv;charset=utf-8'}));
+  a.download = `inventario_${D.desde}_a_${D.hasta}.csv`; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
 /* ---------- reportes ---------- */
 const pd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d, 12); };
 const fd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
@@ -1296,7 +1537,7 @@ function rangoAnterior(p, d, h){
   const len = diffD(d, h) + 1;
   return [addD(d, -len), addD(d, -1)];
 }
-function abrirReportes(){ if (!R.data) cargarReporte(false); }
+function abrirReportes(){ if (R.modo === 'inv' ? !R.inv : !R.data) cargarReporte(false); }
 async function cargarReporte(forzar){
   const [d, h] = rangoPreset(R.preset);
   if (d > h) { toast('La fecha inicial debe ser anterior a la final.', 'warn'); return; }
@@ -1304,6 +1545,7 @@ async function cargarReporte(forzar){
   [R.pDesde, R.pHasta] = rangoAnterior(R.preset, d, h);
   $('#rDesde').value = d; $('#rHasta').value = h;
   document.querySelectorAll('#rPresets button').forEach(b => b.classList.toggle('on', b.dataset.p === R.preset));
+  if (R.modo === 'inv') return cargarInvReporte(forzar);
   const cubierto = R.data && R.rango && R.rango[0] <= R.pDesde && R.rango[1] >= h && Date.now() - R.at < 120000;
   if (cubierto && !forzar) { renderReporte(); return; }
   $('#rBody').innerHTML = `<div class="card rep-empty">Cargando reporte…</div>`;
@@ -1425,6 +1667,8 @@ function graficaSerie(serie){
 }
 
 function renderReporte(){
+  if (R.modo === 'inv') return renderInvReporte();
+  $('#rUsuarioWrap').hidden = false;
   const D = R.data; if (!D) return;
   // filtros
   const rv = R.ruta, uv = R.usuario;
@@ -1556,7 +1800,7 @@ function repCSV(){
 }
 
 /* ---------- render ---------- */
-function renderDia(){ renderCart(); renderTickets(); renderCarga(); $('#vNoCarga').hidden = !!S.carga || !S.ruta; }
+function renderDia(){ renderCart(); renderTickets(); renderCarga(); $('#vNoCarga').hidden = !!S.carga || !S.ruta || S.cerrado; $('#vCerrado').hidden = !S.cerrado; }
 function renderProductos(){ renderTiles(); renderCatalogo(); renderDia(); renderSug(); }
 function renderAll(){
   const r = $('#routeChip'); r.textContent = S.ruta ? rutaNombre(S.ruta) : 'Elegir ruta';
@@ -1577,6 +1821,15 @@ const acts = {
   mapFit: () => ajustarMapa(),
   mapYo: () => miUbicacion(),
   rtSave, rtCancel: () => rtFill(null),
+  invModo: b => { I.modo = b.dataset.v; I.draft = {}; renderInventario(); },
+  invGuardar, invCerrar: b => invCerrar(b.dataset.r, b.dataset.f),
+  invMas: () => { I.verN += 30; renderMovs(); },
+  invCSV: () => invCSV(), invRepMas: () => { R.invN = (R.invN || 20) + 40; renderInvReporte(); },
+  repModo: b => {
+    R.modo = b.dataset.v;
+    document.querySelectorAll('#rModo button').forEach(x => x.classList.toggle('on', x.dataset.v === R.modo));
+    cargarReporte(false);
+  },
   rtEdit: b => { const r = RT.admin.find(x => x.id === b.dataset.r); if (r) { rtFill(r); window.scrollTo(0, 0); $('#rtNombre').focus(); } },
   rtDel: b => rtDel(b.dataset.r),
   rtVerMapa: b => {
@@ -1649,6 +1902,9 @@ $('#rBody').addEventListener('click', e => {
 });
 $('#cTodos').addEventListener('change', renderClientes);
 $('#cFiltro').addEventListener('change', renderClientes);
+$('#iForm').addEventListener('input', e => { const c = e.target.dataset && e.target.dataset.icode; if (c) I.draft[c] = e.target.value; });
+$('#iFProd').addEventListener('change', () => { I.verN = 30; renderMovs(); });
+$('#iFTipo').addEventListener('change', () => { I.verN = 30; renderMovs(); });
 $('#kRuta').addEventListener('change', e => { if (e.target.value) setRuta(e.target.value); });
 $('#pBuscar').addEventListener('input', renderCatalogo);
 $('#vCliente').addEventListener('change', e => { S.clienteSel = e.target.value; calcSugerido(); });
