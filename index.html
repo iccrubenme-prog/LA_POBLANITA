@@ -80,7 +80,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--cobalt);outline:none;
 .btn-primary{background:var(--cobalt-btn);border-color:var(--cobalt-btn);color:var(--on-cobalt)}
 .btn-accent{background:var(--mango);border-color:var(--mango);color:#2B1D00}
 .btn-danger{color:var(--cherry)}
-.btn-block{width:100%;margin-top:1rem}
+.btn-block{width:100%;margin-top:1rem;white-space:normal;text-align:center}
 .btn-big{min-height:58px;font-size:1.1rem;font-family:"Fredoka",system-ui,sans-serif;font-weight:600}
 .btn-sm{min-height:40px;padding:.35rem .75rem;font-size:.88rem;border-radius:10px}
 .btn svg{width:22px;height:22px;flex:none}
@@ -144,8 +144,14 @@ table.data tfoot td{font-weight:700;border-bottom:0;border-top:2px solid var(--i
 .nav-in{max-width:760px;margin:0 auto;display:flex}
 .nav button{flex:1;border:0;background:none;padding:.55rem .25rem .6rem;display:flex;flex-direction:column;align-items:center;gap:.15rem;
   font-size:.78rem;font-weight:700;color:var(--muted);cursor:pointer;position:relative}
-.nav button svg{width:24px;height:24px}
-.nav button{font-size:.66rem;padding-left:0;padding-right:0}
+.nav button svg{width:26px;height:26px}
+.nav button{font-size:.74rem;padding-left:0;padding-right:0}
+.mas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem}
+.mas-item{display:flex;flex-direction:column;align-items:center;gap:.3rem;text-align:center;padding:1rem .5rem;border:1.5px solid var(--line);
+  border-radius:16px;background:var(--bg);cursor:pointer;color:var(--ink)}
+.mas-item svg{width:30px;height:30px;color:var(--cobalt)}
+.mas-item b{font-family:"Fredoka",system-ui,sans-serif;font-weight:600;font-size:1rem}
+.mas-item span{font-size:.75rem;color:var(--muted)}
 .nav button.on{color:var(--cobalt)}
 .nav button.on::before{content:"";position:absolute;top:0;left:25%;right:25%;height:3px;border-radius:0 0 3px 3px;background:var(--mango)}
 
@@ -326,9 +332,8 @@ body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
 
   <section id="v-carga" class="view">
     <div class="card">
-      <h2>Carga de la ruta</h2>
+      <div class="card-head"><h2>Carga de la ruta</h2><span class="hint" id="kInfo" style="margin:0"></span></div>
       <div id="kRutaWrap" hidden><label for="kRuta" style="margin-top:0">Ruta a cargar</label><select id="kRuta"></select></div>
-      <p class="hint" id="kInfo" style="margin-top:-.4rem"></p>
       <button class="btn btn-block" data-act="scanCarga" id="kScan" style="margin-top:.75rem">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M10 8v8M13 8v8M16 8v8"/></svg>
         Escanear piezas (suma 1 por lectura)</button>
@@ -364,6 +369,9 @@ body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
       <div class="card-head"><h2>Registrar movimiento</h2>
         <div class="mini-seg" id="iModoSeg"><button class="on" data-act="invModo" data-v="ENTRADA">Entrada</button><button data-act="invModo" data-v="AJUSTE">Conteo físico</button></div></div>
       <p class="hint" id="iModoHint" style="margin-top:0"></p>
+      <button class="btn btn-block" data-act="scanInv" style="margin:.25rem 0 .5rem">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M10 8v8M13 8v8M16 8v8"/></svg>
+        Escanear piezas (suma 1 por lectura)</button>
       <div id="iForm"></div>
       <label for="iNota">Nota (opcional)</label>
       <input id="iNota" maxlength="120" placeholder="Ej. Compra a proveedor, factura 123">
@@ -450,7 +458,19 @@ body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
   <button data-view="reportes" id="navReportes" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 16v-5M12 16V6M17 16v-8"/></svg>Reportes</button>
   <button data-view="inventario" id="navInventario" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 12 4l9 5v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M7 20v-7h10v7M7 16h10"/></svg>Inventario</button>
   <button data-view="catalogo" id="navCatalogo" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.5"/></svg>Catálogo</button>
+  <button id="navMas" hidden data-mas><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>Más</button>
 </div></nav>
+
+<div class="modal" id="mMas" hidden role="dialog" aria-modal="true" aria-labelledby="mMasT">
+  <div class="sheet">
+    <div class="sheet-head"><h2 id="mMasT">Más opciones</h2><button class="btn btn-sm" data-act="cerrarMas">Cerrar</button></div>
+    <div class="mas-grid">
+      <button class="mas-item" data-act="irA" data-v="rutas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h8.5a3.5 3.5 0 0 0 0-7h-9a3.5 3.5 0 0 1 0-7H16"/></svg><b>Rutas</b><span>Crear y editar rutas</span></button>
+      <button class="mas-item" data-act="irA" data-v="mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg><b>Mapa</b><span>Asignar clientes</span></button>
+      <button class="mas-item" data-act="irA" data-v="catalogo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.5"/></svg><b>Catálogo</b><span>Productos y precios</span></button>
+    </div>
+  </div>
+</div>
 
 <div class="modal login-screen" id="mLogin" hidden role="dialog" aria-modal="true" aria-labelledby="loginT">
   <div class="sheet">
@@ -643,7 +663,8 @@ function logout(msg){
   setProductos([]); setClientes([]); aplicarDia(null);
   ['#cBuscar', '#vCodigo', '#pBuscar', '#lPin'].forEach(id => { $(id).value = ''; });
   fillProd(null); fillCliente(null); renderAll(); show('clientes');
-  ['#navCatalogo', '#navMapa', '#navReportes', '#navRutas', '#navInventario'].forEach(id => { $(id).hidden = true; });
+  ['#navCatalogo', '#navMapa', '#navReportes', '#navRutas', '#navInventario', '#navMas'].forEach(id => { $(id).hidden = true; });
+  $('#mMas').hidden = true;
   I.data = null;
   $('#navVender').hidden = false; $('#statusTxt').textContent = '';
   RT.cargado = false; RT.admin = []; RT.repartidores = []; RT.sinRuta = 0; rtFill(null);
@@ -660,7 +681,9 @@ async function cargarTodo(){
   if (!r.dia) S.fecha = r.fecha;
   const admin = S.user.rol === 'ADMIN';
   ['#navCatalogo', '#navReportes', '#navRutas', '#navInventario'].forEach(id => { $(id).hidden = !admin; });
-  $('#navMapa').hidden = false;
+  $('#navMapa').hidden = admin;
+  ['#navRutas', '#navCatalogo'].forEach(id => { $(id).hidden = true; });
+  $('#navMas').hidden = !admin;
   $('#navVender').hidden = admin;
   M.fitted = false; M.hidden.clear(); M.sel.clear();
   if (document.querySelector(admin ? '#v-vender.on' : '#v-catalogo.on, #v-reportes.on, #v-rutas.on')) show('clientes');
@@ -682,6 +705,8 @@ function show(view){
   if (view === 'vender' && esAdmin) view = 'clientes';
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + view));
   document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('on', b.dataset.view === view));
+  $('#navMas').classList.toggle('on', ['rutas', 'mapa', 'catalogo'].includes(view) && !!esAdmin);
+  $('#mMas').hidden = true;
   window.scrollTo(0, 0);
   if (view === 'mapa') abrirMapa();
   if (view === 'reportes') abrirReportes();
@@ -955,9 +980,8 @@ function renderCarga(){
   if (adm) $('#kRuta').innerHTML = S.rutas.length
     ? S.rutas.map(r => `<option value="${esc(r.id)}"${r.id === S.ruta ? ' selected' : ''}>${esc(r.nombre)}</option>`).join('')
     : '<option value="">Crea una ruta primero</option>';
-  $('#kInfo').textContent = S.ruta
-    ? `${rutaNombre(S.ruta)}, ${new Date(S.fecha + 'T12:00:00').toLocaleDateString('es-MX',{weekday:'long', day:'numeric', month:'long'})}`
-    : 'Elige una ruta para registrar su carga.';
+  const fechaK = new Date(S.fecha + 'T12:00:00').toLocaleDateString('es-MX', {weekday: 'short', day: 'numeric', month: 'short'});
+  $('#kInfo').textContent = !S.ruta ? '' : (S.user && S.user.rol === 'ADMIN') ? fechaK : `${rutaNombre(S.ruta)}, ${fechaK}`;
   if (!S.productos.length) {
     $('#kTabla').innerHTML = `<p class="empty">${S.user && S.user.rol === 'ADMIN' ? 'Primero da de alta productos en Catálogo.' : 'El administrador aún no ha dado de alta productos.'}</p>`;
   } else {
@@ -1044,7 +1068,7 @@ async function saveProd(b){
 let scanner = null, scanMode = null, lastCode = '', lastAt = 0;
 async function openScan(mode){
   scanMode = mode; lastCode = '';
-  $('#scanTitle').textContent = mode === 'venta' ? 'Escanear venta' : mode === 'carga' ? 'Escanear carga' : 'Escanear producto';
+  $('#scanTitle').textContent = mode === 'venta' ? 'Escanear venta' : mode === 'carga' ? 'Escanear carga' : mode === 'inventario' ? (I.modo === 'ENTRADA' ? 'Escanear entrada' : 'Escanear conteo') : 'Escanear producto';
   $('#scanLast').textContent = mode === 'producto' ? 'Apunta al código de la bolsa.' : 'Cada lectura suma una pieza.';
   $('#scanManual').value = ''; $('#mScan').hidden = false;
   if (typeof Html5Qrcode === 'undefined') { $('#scanMsg').textContent = 'El lector de códigos no cargó. Escribe el código a mano abajo.'; return; }
@@ -1083,6 +1107,11 @@ function handleCode(code, fromCam){
   const p = S.prodMap[code];
   if (!p) { $('#scanLast').textContent = `El código ${code} no está en el catálogo.`; return; }
   if (scanMode === 'venta') { if (addToCart(code, 1)) $('#scanLast').textContent = `${p.nombre}: ${S.cart[code]} en el pedido`; }
+  else if (scanMode === 'inventario') {
+    I.draft[code] = (Math.floor(Number(I.draft[code]) || 0)) + 1;
+    $('#scanLast').textContent = `${p.nombre}: ${I.draft[code]} ${I.modo === 'ENTRADA' ? 'por ingresar' : 'contadas'}`;
+    const inp = document.querySelector(`[data-icode="${CSS.escape(code)}"]`); if (inp) inp.value = I.draft[code];
+  }
   else if (scanMode === 'carga') {
     S.cargaDraft[code] = (Number(S.cargaDraft[code]) || 0) + 1; S.cargaDirty = true;
     $('#scanLast').textContent = `${p.nombre}: ${S.cargaDraft[code]} cargadas`; renderCarga();
@@ -1821,7 +1850,9 @@ const acts = {
   mapFit: () => ajustarMapa(),
   mapYo: () => miUbicacion(),
   rtSave, rtCancel: () => rtFill(null),
+  cerrarMas: () => { $('#mMas').hidden = true; }, irA: b => show(b.dataset.v),
   invModo: b => { I.modo = b.dataset.v; I.draft = {}; renderInventario(); },
+  scanInv: () => { if (I.data) openScan('inventario'); },
   invGuardar, invCerrar: b => invCerrar(b.dataset.r, b.dataset.f),
   invMas: () => { I.verN += 30; renderMovs(); },
   invCSV: () => invCSV(), invRepMas: () => { R.invN = (R.invN || 20) + 40; renderInvReporte(); },
@@ -1884,7 +1915,8 @@ const acts = {
   }
 };
 document.addEventListener('click', e => {
-  const nb = e.target.closest('.nav button'); if (nb) { show(nb.dataset.view); return; }
+  const nb = e.target.closest('.nav button');
+  if (nb) { if (nb.hasAttribute('data-mas')) $('#mMas').hidden = false; else show(nb.dataset.view); return; }
   const b = e.target.closest('[data-act]'); if (!b) return;
   const f = acts[b.dataset.act]; if (f) { e.preventDefault(); f(b, e); }
 });
