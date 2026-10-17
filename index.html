@@ -236,6 +236,24 @@ body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
 .inv-row{display:grid;grid-template-columns:1fr 6.5rem;gap:.75rem;align-items:center;padding:.5rem 0;border-top:1px solid var(--line)}
 .inv-row:first-child{border-top:0}
 .inv-row input{text-align:center;font-weight:700}
+.cli-search{display:flex;align-items:center;gap:.5rem;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);padding:0 .35rem 0 .75rem}
+.cli-search:focus-within{border-color:var(--cobalt);box-shadow:0 0 0 3px var(--cobalt-soft)}
+.cli-search svg{width:20px;height:20px;color:var(--muted);flex:none}
+.cli-search input{border:0;background:transparent;padding-left:0;box-shadow:none !important;flex:1;min-width:0}
+.cli-search .btn{flex:none}
+.cli-res{margin-top:.4rem}
+.cli-opt{display:flex;justify-content:space-between;align-items:center;gap:.6rem;width:100%;text-align:left;background:var(--surface);
+  border:1.5px solid var(--line);border-radius:12px;padding:.6rem .75rem;margin-top:.35rem;cursor:pointer;min-height:56px}
+.cli-opt strong{display:block;font-size:1rem}
+.cli-opt mark{background:var(--warn-bg);color:inherit;border-radius:3px;padding:0 1px}
+.cli-opt .km{font-size:.8rem;font-weight:700;color:var(--cobalt);white-space:nowrap}
+.cli-all{display:block;width:100%;margin-top:.5rem;background:none;border:1.5px dashed var(--line);border-radius:12px;padding:.65rem;font-weight:700;color:var(--cobalt);cursor:pointer}
+.cli-sec{font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:.8rem 0 0}
+.cli-hint{font-size:.8rem;color:var(--muted);margin:.5rem 0 0;font-weight:700}
+.cli-card{display:flex;align-items:center;gap:.75rem;border:2px solid var(--cobalt-btn);background:var(--cobalt-soft);border-radius:14px;padding:.7rem .8rem}
+.cli-ini{width:44px;height:44px;border-radius:50%;background:var(--cobalt-btn);color:#fff;display:flex;align-items:center;justify-content:center;
+  font-family:"Fredoka",system-ui,sans-serif;font-weight:700;font-size:1.1rem;flex:none}
+.cli-card .item-main strong{font-size:1.08rem}
 .credit{display:flex;align-items:center;justify-content:center;gap:.4rem;font-size:.78rem;color:var(--muted);letter-spacing:.02em}
 .credit img{width:16px;height:16px}
 .credit b{font-weight:700}
@@ -308,8 +326,16 @@ body.locked .top,body.locked main,body.locked .nav{visibility:hidden}
   <section id="v-vender" class="view">
     <div class="card">
       <h2>Venta</h2>
-      <label for="vCliente" style="margin-top:0">Cliente</label>
-      <select id="vCliente"></select>
+      <label for="vBuscaCli" style="margin-top:0">Cliente</label>
+      <div id="vCliBox">
+        <div class="cli-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="vBuscaCli" type="search" autocomplete="off" placeholder="Escribe el nombre o la calle" aria-controls="vCliRes">
+          <button class="btn btn-sm" data-act="cliCerca" id="vCerca" type="button">Cerca de mí</button>
+        </div>
+        <div id="vCliRes" class="cli-res" role="listbox"></div>
+      </div>
+      <div id="vCliSel" hidden></div>
       <div id="vSug"></div>
     </div>
     <div id="vCerrado" class="banner" hidden>El día de esta ruta ya se cerró. No se pueden registrar más ventas hoy.</div>
@@ -829,13 +855,69 @@ function renderClientes(){
 }
 
 /* ---------- venta ---------- */
+const CLI = {pos: null, todos: false};
+const distKm = (a, b) => { const R = 6371, r = x => x * Math.PI / 180, dLa = r(b.lat - a.lat), dLo = r(b.lng - a.lng);
+  const h = Math.sin(dLa / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLo / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
+const fmtKm = d => d < 1 ? Math.round(d * 1000 / 10) * 10 + ' m' : d.toFixed(1) + ' km';
+function resaltar(txt, q){
+  const t = String(txt || ''); if (!q) return esc(t);
+  const i = norm(t).indexOf(q); if (i < 0) return esc(t);
+  return esc(t.slice(0, i)) + '<mark>' + esc(t.slice(i, i + q.length)) + '</mark>' + esc(t.slice(i + q.length));
+}
 function renderClienteSelect(){
+  const sel = S.clientes.find(c => c.id === S.clienteSel);
+  $('#vCliBox').hidden = !!sel; $('#vCliSel').hidden = !sel;
+  if (sel) {
+    const ini = sel.nombre.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+    const compro = ((S.ventas && S.ventas.tickets) || []).some(t => t.clienteId === sel.id);
+    $('#vCliSel').innerHTML = `<div class="cli-card"><span class="cli-ini">${esc(ini)}</span>
+      <div class="item-main"><strong>${esc(sel.nombre)}</strong><span class="sub">${esc(sel.direccion || 'Sin dirección')}</span>
+        ${compro ? '<span class="pill ok" style="margin-top:.25rem">Ya compró hoy</span>' : ''}</div>
+      <button class="btn btn-sm" data-act="cliCambiar" type="button">Cambiar</button></div>`;
+    return;
+  }
+  renderCliRes();
+}
+function renderCliRes(){
+  const q = norm($('#vBuscaCli').value.trim());
+  const hoy = new Set(((S.ventas && S.ventas.tickets) || []).map(t => t.clienteId));
   let list = S.clientes.filter(c => c.ruta === S.ruta);
-  const extra = S.clientes.find(c => c.id === S.clienteSel && c.ruta !== S.ruta);
-  if (extra) list = list.concat([extra]);
-  list.sort((a,b) => norm(a.nombre).localeCompare(norm(b.nombre)));
-  $('#vCliente').innerHTML = `<option value="">Selecciona un cliente</option>` +
-    list.map(c => `<option value="${esc(c.id)}"${c.id === S.clienteSel ? ' selected' : ''}>${esc(c.nombre)}</option>`).join('');
+  if (q) list = list.filter(c => norm(c.nombre + ' ' + (c.direccion || '')).includes(q));
+  list = list.map(c => ({c, d: CLI.pos && c.lat != null ? distKm(CLI.pos, c) : null, hoy: hoy.has(c.id),
+    ini: q ? (norm(c.nombre).startsWith(q) ? 0 : norm(c.nombre).includes(q) ? 1 : 2) : 0}));
+  list.sort((a, b) => a.ini - b.ini || (a.hoy - b.hoy) ||
+    (CLI.pos ? (a.d ?? 1e9) - (b.d ?? 1e9) : 0) || norm(a.c.nombre).localeCompare(norm(b.c.nombre)));
+  const total = list.length, max = CLI.todos ? Infinity : q ? 8 : 5;
+  const opt = x => `<button class="cli-opt" role="option" data-act="cliElegir" data-id="${esc(x.c.id)}" type="button">
+      <span class="item-main"><strong>${resaltar(x.c.nombre, q)}</strong><span class="sub">${resaltar(x.c.direccion || 'Sin dirección', q)}</span></span>
+      <span style="text-align:right">${x.d !== null ? `<span class="km">${fmtKm(x.d)}</span>` : ''}${x.hoy ? '<span class="pill ok" style="display:block;margin-top:.2rem">Ya compró</span>' : ''}</span></button>`;
+  let cuerpo;
+  if (CLI.todos) {
+    const pend = list.filter(x => !x.hoy), ya = list.filter(x => x.hoy);
+    cuerpo = (pend.length ? `<p class="cli-sec">Por visitar (${pend.length})</p>` + pend.map(opt).join('') : '')
+      + (ya.length ? `<p class="cli-sec">Ya compraron hoy (${ya.length})</p>` + ya.map(opt).join('') : '');
+  } else {
+    const titulo = q ? '' : CLI.pos ? 'Más cercanos a ti' : 'Pendientes de visitar hoy';
+    cuerpo = (titulo ? `<p class="cli-hint">${titulo}</p>` : '') + list.slice(0, max).map(opt).join('');
+  }
+  const toggle = total > (q ? 8 : 5) || CLI.todos
+    ? `<button class="cli-all" data-act="cliTodos" type="button">${CLI.todos ? 'Ver menos' : `Ver ${q ? 'los' : 'todos los'} ${total} clientes${q ? ' encontrados' : ''}`}</button>` : '';
+  $('#vCliRes').innerHTML = !S.clientes.some(c => c.ruta === S.ruta) ? '<p class="cli-hint">Tu ruta aún no tiene clientes. Dalos de alta en Clientes.</p>'
+    : !total ? `<p class="cli-hint">Ningún cliente coincide con "${esc($('#vBuscaCli').value.trim())}".</p>`
+    : cuerpo + toggle;
+}
+function elegirCliente(id){
+  S.clienteSel = id; $('#vBuscaCli').value = ''; CLI.todos = false; renderClienteSelect(); calcSugerido();
+}
+function clientesCerca(b){
+  if (CLI.pos) { CLI.pos = null; b.textContent = 'Cerca de mí'; renderCliRes(); return; }
+  if (!navigator.geolocation) { toast('Este navegador no permite leer la ubicación.', 'err'); return; }
+  b.disabled = true; b.textContent = 'Ubicando…';
+  navigator.geolocation.getCurrentPosition(p => {
+    CLI.pos = {lat: p.coords.latitude, lng: p.coords.longitude}; b.disabled = false; b.textContent = 'Quitar orden';
+    renderCliRes();
+  }, () => { b.disabled = false; b.textContent = 'Cerca de mí'; toast('No se pudo leer tu ubicación.', 'err'); },
+  {enableHighAccuracy: true, timeout: 15000, maximumAge: 60000});
 }
 let sugToken = 0;
 async function calcSugerido(){
@@ -926,7 +1008,7 @@ function renderTickets(){
 }
 async function cobrar(){
   if (!S.ruta) { openRuta(); return; }
-  if (!S.clienteSel) { toast('Selecciona el cliente antes de cobrar.', 'warn'); $('#vCliente').focus(); return; }
+  if (!S.clienteSel) { toast('Busca y elige al cliente antes de cobrar.', 'warn'); $('#vBuscaCli').focus(); return; }
   const items = Object.entries(S.cart).filter(([,q]) => q > 0).map(([codigo, cantidad]) => ({codigo, cantidad}));
   if (!items.length) { toast('El pedido está vacío.', 'warn'); return; }
   if (!S.reqId) S.reqId = uid();
@@ -1966,7 +2048,7 @@ function repCSV(){
 }
 
 /* ---------- render ---------- */
-function renderDia(){ renderCart(); renderTickets(); renderCarga(); $('#vNoCarga').hidden = !!S.carga || !S.ruta || S.cerrado; $('#vCerrado').hidden = !S.cerrado; }
+function renderDia(){ renderCart(); renderTickets(); renderClienteSelect(); renderCarga(); $('#vNoCarga').hidden = !!S.carga || !S.ruta || S.cerrado; $('#vCerrado').hidden = !S.cerrado; }
 function renderProductos(){ renderTiles(); renderCatalogo(); renderDia(); renderSug(); }
 function renderAll(){
   const r = $('#routeChip'); r.textContent = S.ruta ? rutaNombre(S.ruta) : 'Elegir ruta';
@@ -1984,6 +2066,10 @@ const acts = {
     fillCliente(c); window.scrollTo(0, 0); $('#cNombre').focus();
   },
   cancelCliente: () => fillCliente(null),
+  cliElegir: b => elegirCliente(b.dataset.id),
+  cliCambiar: () => { S.clienteSel = ''; S.sug = null; renderSug(); renderClienteSelect(); $('#vBuscaCli').focus(); },
+  cliCerca: b => clientesCerca(b),
+  cliTodos: () => { CLI.todos = !CLI.todos; renderCliRes(); if (!CLI.todos) $('#vCliBox').scrollIntoView({block: 'start'}); },
   mapFit: () => ajustarMapa(),
   mapYo: () => miUbicacion(),
   rtSave, rtCancel: () => rtFill(null),
@@ -2076,7 +2162,11 @@ $('#iFProd').addEventListener('change', () => { I.verN = 30; renderMovs(); });
 $('#iFTipo').addEventListener('change', () => { I.verN = 30; renderMovs(); });
 $('#kRuta').addEventListener('change', e => { if (e.target.value) setRuta(e.target.value); });
 $('#pBuscar').addEventListener('input', renderCatalogo);
-$('#vCliente').addEventListener('change', e => { S.clienteSel = e.target.value; calcSugerido(); });
+$('#vBuscaCli').addEventListener('input', renderCliRes);
+$('#vBuscaCli').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const f = document.querySelector('#vCliRes [data-act=cliElegir]'); if (f) { e.preventDefault(); elegirCliente(f.dataset.id); }
+});
 $('#vCodigo').addEventListener('keydown', e => { if (e.key === 'Enter') acts.addCodigo(); });
 $('#scanManual').addEventListener('keydown', e => { if (e.key === 'Enter') acts.scanManualAdd(); });
 $('#lPin').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
